@@ -12,10 +12,10 @@ namespace Harvester
     {
         static void Main(string[] args)
         {
-            //Collect();
+            Collect("Matmul");
             
             //Analyze("Toy", "data/2013-12-6 17h 57m");
-            Analyze("Toy.Matmul", "data/2014-1-28 13h 55m");
+            //Analyze("Matmul", "data/2014-1-28 18h 32m");
 
 
             Console.WriteLine("Done.");

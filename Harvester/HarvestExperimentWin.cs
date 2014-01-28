@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define OVERESTIMATE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -90,7 +91,7 @@ namespace Harvester
             for (int coreID = 0; coreID < counters[0].Core.Length; ++coreID)
                 lastSwitch.Add(coreID, 0);
 
-            const int span = 5;
+            const int span = 100;
 
             // Compute the average from the run before the process
             var l1noise = 0.0;
@@ -202,6 +203,10 @@ namespace Harvester
 
                     // Compute a proportion
                     var systemShare = threadWork[0] / totalWork;
+#if OVERESTIMATE
+                    systemShare = 0;
+                    totalWork = threadWork.Skip(1).Sum(w => w.Value);
+#endif
                     
                     // Add proportion per thread
                     foreach (var threadID in threadWork.Keys)
