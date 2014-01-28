@@ -5,6 +5,7 @@ This utility allows performance data collection of both operating system events 
 
 Harvester utility has been developed originally by Roman Atachiants at the School of Computer Science & Statistics at Trinity College Dublin as part of research conducted at The Irish Software Engineering Research Centre (LERO), supported by Science Foundation Ireland (SFI).
 
+![Harvester](Harvester.External/Harvester.png)
 
 License
 =======
