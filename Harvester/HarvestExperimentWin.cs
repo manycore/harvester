@@ -61,7 +61,7 @@ namespace Harvester
 
             // Get the proces to monitor
             var process = traceLog.Processes
-             .Where(p => p.Name == processName)
+             .Where(p => p.Name.StartsWith(processName))
              .FirstOrDefault();
 
             // Get the threads
@@ -91,7 +91,7 @@ namespace Harvester
             for (int coreID = 0; coreID < counters[0].Core.Length; ++coreID)
                 lastSwitch.Add(coreID, 0);
 
-            const int span = 100;
+            const int span = 5;
 
             // Compute the average from the run before the process
             var l1noise = 0.0;
@@ -129,10 +129,17 @@ namespace Harvester
                     var hwcore = hw.Core[coreID];
                     var events = cs.Where(e => e.ProcessorNumber == coreID);
                         
-                    // Get the counters
+                    // Get the cache misses
                     var l1miss = (hwcore.L2HIT + hwcore.L2MISS);
                     var l2miss = hwcore.L2MISS;
                     var l3miss = hwcore.L3MISS;
+
+                    // Get the amount of cycles lost
+                    var l2perf = hwcore.L2CLK;
+                    var l3perf = hwcore.L3CLK;
+
+                    // Get the instructions per cycle
+                    var ipc = hwcore.IPC;
 
    
                     // We got some events, calculate the proportion
@@ -225,6 +232,9 @@ namespace Harvester
                             output.Add("l1miss", process.Name, "user", timeFrom.Ticks, Math.Round(threadShare * l1miss), threadID, process.ProcessID, coreID, 1);
                             output.Add("l2miss", process.Name, "user", timeFrom.Ticks, Math.Round(threadShare * l2miss), threadID, process.ProcessID, coreID, 1);
                             output.Add("l3miss", process.Name, "user", timeFrom.Ticks, Math.Round(threadShare * l3miss), threadID, process.ProcessID, coreID, 1);
+                            output.Add("l2perf", process.Name, "user", timeFrom.Ticks, threadShare * l2perf, threadID, process.ProcessID, coreID, 1);
+                            output.Add("l3perf", process.Name, "user", timeFrom.Ticks, threadShare * l3perf, threadID, process.ProcessID, coreID, 1);
+                            output.Add("ipc",    process.Name, "user", timeFrom.Ticks, threadShare * ipc   , threadID, process.ProcessID, coreID, 1);
                                     
                         }
                     }
@@ -233,13 +243,15 @@ namespace Harvester
                     output.AddSystem("l1miss", timeFrom.Ticks, Math.Round(systemShare * l1miss), coreID);
                     output.AddSystem("l2miss", timeFrom.Ticks, Math.Round(systemShare * l2miss), coreID);
                     output.AddSystem("l3miss", timeFrom.Ticks, Math.Round(systemShare * l3miss), coreID);
-
+                    output.AddSystem("l2perf", timeFrom.Ticks, systemShare * l2perf, coreID);
+                    output.AddSystem("l2perf", timeFrom.Ticks, systemShare * l3perf, coreID);
+                    output.AddSystem("ipc",    timeFrom.Ticks, systemShare * ipc   , coreID);
                 }
 
 
                 try
                 {
-                    Console.WriteLine("ETA: {0}", TimeSpan.FromMilliseconds((((DateTime.Now - analysisBegin).TotalMilliseconds / 5) * (timeSpan.TotalMilliseconds - t))).ToString(@"h\h\ m\m\ s\s"));
+                    Console.WriteLine("ETA: {0}", TimeSpan.FromMilliseconds((((DateTime.Now - analysisBegin).TotalMilliseconds / span) * (timeSpan.TotalMilliseconds - t))).ToString(@"h\h\ m\m\ s\s"));
                 }
                 catch (Exception) { }
             }

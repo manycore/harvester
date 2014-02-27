@@ -12,10 +12,12 @@ namespace Harvester
     {
         static void Main(string[] args)
         {
-            Collect("Matmul");
+            //Collect("Matmul");
             
             //Analyze("Toy", "data/2013-12-6 17h 57m");
-            //Analyze("Matmul", "data/2014-1-28 18h 32m");
+            Analyze("Matmul", "data/Matmul - IJK");
+            Analyze("Matmul", "data/Matmul - KJI");
+            Analyze("Matmul", "data/Matmul - KIJ");
 
 
             Console.WriteLine("Done.");
@@ -31,7 +33,7 @@ namespace Harvester
             var pcm = HarvestProcess.FromBinary("pcm-win", "pcm.exe", Resources.pcm_win);
             var os = HarvestProcess.FromBinary("os-win", "PerfMonitor.exe", Resources.os_win);
 
-            pcm.Run("5");
+            pcm.Run("1");
             os.Run(" -KernelEvents:ContextSwitch start");
 
             Console.WriteLine("Press any key to stop data collection...");
