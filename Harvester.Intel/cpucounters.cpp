@@ -36,6 +36,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #ifdef _MSC_VER
 #include <intrin.h>
 #include <windows.h>
+#include <algorithm>
 #include <tchar.h>
 #include "winring0/OlsApiInit.h"
 #else

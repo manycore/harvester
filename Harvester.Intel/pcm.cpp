@@ -1,3 +1,5 @@
+#include "PCM_Win/stdafx.h"
+
 /*
 Copyright (c) 2009-2012, Intel Corporation
 All rights reserved.
@@ -23,7 +25,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #ifdef _MSC_VER
 #pragma warning(disable : 4996) // for sprintf
 #include <windows.h>
-#include "../PCM_Win/windriver.h"
+#include "PCM_Win/windriver.h"
 #else
 #include <unistd.h>
 #include <signal.h>
@@ -39,14 +41,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "utils.h"
 
 #define SIZE (10000000)
-#define DELAY 1 // in seconds
+#define DELAY 1 // in milliseconds
 
 using namespace std;
 
 template <class IntType>
 double float_format(IntType n)
 {
-	return double(n)/1024/1024;
+	return double(n) / 1024 / 1024;
 }
 
 std::string temp_format(int32 t)
@@ -79,11 +81,11 @@ void print_help(char * prog_name)
 
 
 void print_csv_header(PCM * m,
-					  const int cpu_model,
-					  const bool show_core_output,
-					  const bool show_socket_output,
-					  const bool show_system_output
-					  )
+	const int cpu_model,
+	const bool show_core_output,
+	const bool show_socket_output,
+	const bool show_system_output
+	)
 {
 	// print first header line
 	cout << "\nSYSTEM;SYSTEM;";
@@ -107,11 +109,11 @@ void print_csv_header(PCM * m,
 		for (uint32 i = 0; i < m->getNumCores(); ++i)
 		{
 			if (cpu_model == PCM::ATOM){
-				for(uint32 j = 0; j < 6; ++j)
+				for (uint32 j = 0; j < 6; ++j)
 					cout << "C" << i << "@S" << m->getSocketId(i) << ";";
 			}
 			else{
-				for(uint32 j = 0; j < 10; ++j)
+				for (uint32 j = 0; j < 10; ++j)
 					cout << "C" << i << "@S" << m->getSocketId(i) << ";";
 			}
 
@@ -136,7 +138,7 @@ void print_csv_header(PCM * m,
 	}
 
 
-	
+
 
 	if (show_core_output)
 	{
@@ -159,17 +161,17 @@ long prevs = -1;
 bool start = false;
 
 void print_csv(PCM * m,
-			   const std::vector<CoreCounterState> & cstates1,
-			   const std::vector<CoreCounterState> & cstates2,
-			   const std::vector<SocketCounterState> & sktstate1,
-			   const std::vector<SocketCounterState> & sktstate2,
-			   const SystemCounterState& sstate1,
-			   const SystemCounterState& sstate2,
-			   const int cpu_model,
-			   const bool show_core_output,
-			   const bool show_socket_output,
-			   const bool show_system_output
-			   )
+	const std::vector<CoreCounterState> & cstates1,
+	const std::vector<CoreCounterState> & cstates2,
+	const std::vector<SocketCounterState> & sktstate1,
+	const std::vector<SocketCounterState> & sktstate2,
+	const SystemCounterState& sstate1,
+	const SystemCounterState& sstate2,
+	const int cpu_model,
+	const bool show_core_output,
+	const bool show_socket_output,
+	const bool show_system_output
+	)
 {
 	time_t t = time(NULL);
 	tm *tt = localtime(&t);
@@ -178,17 +180,18 @@ void print_csv(PCM * m,
 
 
 	long ctime = clock();
-	if(prevs != tt->tm_sec){
+	if (prevs != tt->tm_sec){
 		milli = 0;
-		if(prevs != -1)
+		if (prevs != -1)
 			start = true;
-	}else{
+	}
+	else{
 		milli += ctime - prevc;
 	}
 	prevs = tt->tm_sec;
 	prevc = ctime;
 
-	if(!start)
+	if (!start)
 		return;
 
 	cout << "\n" << tt->tm_hour << ':' << tt->tm_min << ':' << tt->tm_sec << ':' << milli << ';';
@@ -203,15 +206,17 @@ void print_csv(PCM * m,
 				';' << getActiveRelativeFrequency(sstate1, sstate2) <<
 				';' << getL3CacheMisses(sstate1, sstate2) << // float_format()
 				';' << getL2CacheMisses(sstate1, sstate2) <<
-				';' << getL3CacheHits(sstate1, sstate2) << 
-				';' << getL2CacheHits(sstate1, sstate2) << 
+				';' << getL3CacheHits(sstate1, sstate2) <<
+				';' << getL2CacheHits(sstate1, sstate2) <<
 				';' << getCyclesLostDueL3CacheMisses(sstate1, sstate2) <<
 				';' << getCyclesLostDueL2CacheMisses(sstate1, sstate2) <<
 				';';
+
+
 			if (!(m->memoryTrafficMetricsAvailable()))
 				cout << "N/A;N/A;";
 			else
-				cout  << getBytesReadFromMC(sstate1, sstate2) / double(1024ULL * 1024ULL * 1024ULL) <<
+				cout << getBytesReadFromMC(sstate1, sstate2) / double(1024ULL * 1024ULL * 1024ULL) <<
 				';' << getBytesWrittenToMC(sstate1, sstate2) / double(1024ULL * 1024ULL * 1024ULL) << ';';
 		}
 		else
@@ -278,7 +283,7 @@ int main(int argc, char * argv[])
 #endif
 
 	cout << endl;
-	cout << " Intel(r) Performance Counter Monitor "<< INTEL_PCM_VERSION << endl;
+	cout << " Intel(r) Performance Counter Monitor " << INTEL_PCM_VERSION << endl;
 	cout << endl;
 	cout << " Copyright (c) 2009-2012 Intel Corporation" << endl;
 	cout << endl;
@@ -330,12 +335,12 @@ int main(int argc, char * argv[])
 					print_help(argv[l]);
 					return -1;
 				}
-				else 
+				else
 					if (strcmp(argv[l], "--nocores") == 0 ||
 						strcmp(argv[l], "-nc") == 0 ||
 						strcmp(argv[l], "/nc") == 0)
 					{
-						show_core_output = false;
+					show_core_output = false;
 					}
 					else
 
@@ -343,7 +348,7 @@ int main(int argc, char * argv[])
 							strcmp(argv[l], "-ns") == 0 ||
 							strcmp(argv[l], "/ns") == 0)
 						{
-							show_socket_output = false;
+					show_socket_output = false;
 						}
 
 						else
@@ -352,18 +357,18 @@ int main(int argc, char * argv[])
 								strcmp(argv[l], "-nsys") == 0 ||
 								strcmp(argv[l], "/nsys") == 0)
 							{
-								show_system_output = false;
+					show_system_output = false;
 							}
 
-							if (strcmp(argv[l], "-csv") == 0 ||
-								strcmp(argv[l], "/csv") == 0)
-							{
-								csv_output = true;
-							}
-							if (strcmp(argv[l], "--noJKTWA") == 0)
-							{
-								disable_JKT_workaround = true;
-							}
+				if (strcmp(argv[l], "-csv") == 0 ||
+					strcmp(argv[l], "/csv") == 0)
+				{
+					csv_output = true;
+				}
+				if (strcmp(argv[l], "--noJKTWA") == 0)
+				{
+					disable_JKT_workaround = true;
+				}
 			}
 		}
 
@@ -413,7 +418,7 @@ int main(int argc, char * argv[])
 #endif
 
 	PCM * m = PCM::getInstance();
-	if(disable_JKT_workaround) m->disableJKTWorkaround();
+	if (disable_JKT_workaround) m->disableJKTWorkaround();
 	PCM::ErrorCode status = m->program();
 	switch (status)
 	{
@@ -438,7 +443,7 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 
-	cout << "\nDetected "<< m->getCPUBrandString() << " \"Intel(r) microarchitecture codename "<<m->getUArchCodename()<<"\""<<endl;
+	cout << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << endl;
 
 	std::vector<CoreCounterState> cstates1, cstates2;
 	std::vector<SocketCounterState> sktstate1, sktstate2;
@@ -455,13 +460,13 @@ int main(int argc, char * argv[])
 	{
 		cout << std::flush;
 
+		// We set the delay in milliseconds already
+		int delay_ms = delay;
+
 #ifdef _MSC_VER
-		int delay_ms = delay * 1;
-		// compensate slow Windows console output
-		if(TimeAfterSleep) delay_ms -= (uint32)(m->getTickCount() - TimeAfterSleep);
-		if(delay_ms < 0) delay_ms = 0;
-#else
-		int delay_ms = delay * 1;
+		// Compensate slow Windows console output (DISABLED)
+		// if (TimeAfterSleep) delay_ms -= (uint32)(m->getTickCount() - TimeAfterSleep);
+		// if (delay_ms < 0) delay_ms = 0;
 #endif
 
 		if (sysCmd)

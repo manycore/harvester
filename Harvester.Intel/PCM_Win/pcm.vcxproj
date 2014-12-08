@@ -91,7 +91,7 @@
     <ClCompile Include="..\msr.cpp" />
     <ClCompile Include="..\pci.cpp" />
     <ClCompile Include="..\client_bw.cpp" />
-    <ClCompile Include="pcm.cpp" />
+    <ClCompile Include="..\pcm.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1482,6 +1482,7 @@ uint64 getL2CacheMisses(const CounterStateType & before, const CounterStateType 
     {
         return after.ArchLLCMiss - before.ArchLLCMiss;
     }
+
     uint64 L3Miss = after.L3Miss - before.L3Miss;
     uint64 L3UnsharedHit = after.L3UnsharedHit - before.L3UnsharedHit;
     uint64 L2HitM = after.L2HitM - before.L2HitM;
