@@ -68,7 +68,4 @@
       <Filter>My Amplifier Results</Filter>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
 </Project>

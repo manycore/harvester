@@ -91,7 +91,6 @@ namespace Harvester
             for (int coreID = 0; coreID < counters[0].Core.Length; ++coreID)
                 lastSwitch.Add(coreID, 0);
 
-            const int span = 5;
 
             // Compute the average from the run before the process
             var l1noise = 0.0;
@@ -105,8 +104,10 @@ namespace Harvester
             }
             catch{ } // Ignore, the noise will be just zero
 
+            // The interval of upsampling
+            const int span = 5;
 
-            // Upsample at 1 millisecond interval
+            // Upsample at the specified interval
             for (int t = 0; t < timeSpan.TotalMilliseconds; t += span)
             {
                 var analysisBegin = DateTime.Now;
