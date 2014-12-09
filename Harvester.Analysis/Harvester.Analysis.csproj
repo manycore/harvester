@@ -37,12 +37,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Diagnostics\ThreadProcessor.cs" />
-    <Compile Include="Diagnostics\ThreadFrame.cs" />
-    <Compile Include="Diagnostics\TimeSeries.cs" />
-    <Compile Include="Diagnostics\Thread.cs" />
+    <Compile Include="Diagnostics\EventEntry.cs" />
+    <Compile Include="Diagnostics\EventThread.cs" />
+    <Compile Include="Diagnostics\EventProcessor.cs" />
+    <Compile Include="Diagnostics\EventFrame.cs" />
     <Compile Include="Diagnostics\Events\ContextSwitch.cs" />
     <Compile Include="Diagnostics\Events\PageFault.cs" />
+    <Compile Include="Diagnostics\EventOutput.cs" />
     <Compile Include="Processors\SimpleProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

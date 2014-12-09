@@ -47,7 +47,6 @@
   <ItemGroup>
     <Compile Include="HarvestExperimentWin.cs" />
     <Compile Include="HarvestExperiment.cs" />
-    <Compile Include="HarvestOutput.cs" />
     <Compile Include="HarvestProcess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

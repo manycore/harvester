@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Diagnostics.Tracing;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,25 +12,25 @@ namespace Harvester.Analysis
     /// <summary>
     /// Represents a set of threads with time per state.
     /// </summary>
-    public sealed class ThreadFrame
+    public sealed class EventFrame
     {
         #region Constructor & Properties
-        private readonly Dictionary<int, double[]> Map 
-            = new Dictionary<int, double[]>();
+        private readonly Dictionary<EventThread, double[]> Map
+            = new Dictionary<EventThread, double[]>();
 
         /// <summary>
         /// Constructs a new frame.
         /// </summary>
         /// <param name="time">the start time of the frame</param>
         /// <param name="duration">the duration of the frame</param>
-        public ThreadFrame(DateTime time, TimeSpan duration, int core)
+        public EventFrame(DateTime time, TimeSpan duration, int core)
         {
             this.Time = time;
             this.Duration = duration;
             this.Core = core;
 
             // We always add a default thread
-            this.Map.Add(0, new double[8]);
+            this.Map.Add(EventThread.System, new double[8]);
         }
 
         /// <summary>
@@ -39,6 +40,15 @@ namespace Harvester.Analysis
         {
             get;
             private set;
+        }
+
+        /// <summary>
+        /// Gets the hardware counters for this frame.
+        /// </summary>
+        public TraceCounterCore Counters
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -70,7 +80,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// Gets the threads that are contained within this time set.
         /// </summary>
-        public int[] Threads
+        public EventThread[] Threads
         {
             get { return this.Map.Keys.ToArray(); }
         }
@@ -83,7 +93,7 @@ namespace Harvester.Analysis
         /// <param name="thread">The thread to increment.</param>
         /// <param name="state">The state of the thread.</param>
         /// <param name="elapsed">The time spent in that state.</param>
-        public void Increment(int thread, ThreadState state, double elapsed)
+        public void Increment(EventThread thread, ThreadState state, double elapsed)
         {
             if (!this.Map.ContainsKey(thread))
                 this.Map.Add(thread, new double[8]);
@@ -136,7 +146,7 @@ namespace Harvester.Analysis
         /// <param name="thread">The thread to query.</param>
         /// <param name="state">The state to query.</param>
         /// <returns>The time elapsed in the frame in that state.</returns>
-        public double GetTime(int thread, ThreadState state)
+        public double GetTime(EventThread thread, ThreadState state)
         {
             if (!this.Map.ContainsKey(thread))
                 throw new ArgumentOutOfRangeException("Thread #" + thread + " is not contained within the set.");
@@ -149,7 +159,7 @@ namespace Harvester.Analysis
         /// <param name="thread">The thread to query.</param>
         /// <param name="state">The state to query.</param>
         /// <returns>The relative time elapsed in the frame in that state.</returns>
-        public double GetShare(int thread, ThreadState state)
+        public double GetShare(EventThread thread, ThreadState state)
         {
             return this.GetTime(thread, state) / this.Total;
         }
@@ -159,7 +169,7 @@ namespace Harvester.Analysis
         /// </summary>
         /// <param name="thread">The thread to query.</param>
         /// <returns>The time elapsed in the frame in any state.</returns>
-        public double GetTime(int thread)
+        public double GetTime(EventThread thread)
         {
             if (!this.Map.ContainsKey(thread))
                 throw new ArgumentOutOfRangeException("Thread #" + thread + " is not contained within the set.");
@@ -171,10 +181,11 @@ namespace Harvester.Analysis
         /// </summary>
         /// <param name="thread">The thread to query.</param>
         /// <returns>The time elapsed in the frame in any state.</returns>
-        public double GetShare(int thread)
+        public double GetShare(EventThread thread)
         {
             return this.GetTime(thread) / this.Total;
         }
         #endregion
     }
+
 }

@@ -13,7 +13,7 @@ namespace Harvester.Analysis
     /// Represents a base class that can performm resampling and transforms
     /// the trace & hardware counters data into queryable data.
     /// </summary>
-    public abstract class ThreadProcessor
+    public abstract class EventProcessor
     {
         #region Constructors
         protected readonly TraceLog TraceLog;
@@ -29,14 +29,14 @@ namespace Harvester.Analysis
         protected int CoreCount;
         protected TraceProcess Process;
         protected TraceThread[] Threads;
-        protected ThreadFrame[] Frames;
+        protected EventFrame[] Frames;
 
         /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
         /// <param name="events">The data file containing events.</param>
         /// <param name="counters">The data file containing harware coutnters.</param>
-        public ThreadProcessor(TraceLog events, TraceCounter[] counters)
+        public EventProcessor(TraceLog events, TraceCounter[] counters)
         {
             // Add our data sources
             this.TraceLog = events;
@@ -57,7 +57,7 @@ namespace Harvester.Analysis
         /// <param name="processName">The process to analyze.</param>
         /// <param name="interval">The interval (in milliseconds) of a frame.</param>
         /// <returns></returns>
-        private ThreadFrame[] GetFrames(string processName, ushort interval)
+        private EventFrame[] GetFrames(string processName, ushort interval)
         {
             // Get the proces to monitor
             this.Process = this.TraceLog.Processes
@@ -87,7 +87,7 @@ namespace Harvester.Analysis
                 .ToArray();
 
             // The list for our results
-            var result = new List<ThreadFrame>();
+            var result = new List<EventFrame>();
 
             // Upsample at the specified interval
             for (int i = 0; i < this.Count; ++i)
@@ -123,7 +123,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// Gets one frame.
         /// </summary>
-        private ThreadFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches)
+        private EventFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches)
         {
             // We got some events, calculate the proportion
             var fileTime = time.ToFileTime();
@@ -131,13 +131,13 @@ namespace Harvester.Analysis
             var maxTime  = (double)(this.Interval.TotalMilliseconds * 10000);
 
             // Construct a new frame
-            var frame = new ThreadFrame(time, this.Interval, core);
+            var frame = new EventFrame(time, this.Interval, core);
             var previous = 0L;
 
             foreach (var sw in switches)
             {
                 // Old thread id & process id
-                var thread = sw.OldProcessId != process ? 0 : sw.OldThreadId;
+                var thread = EventThread.FromTrace(sw.OldThreadId, sw.OldProcessId, this.Process);
                 var state = sw.State;
 
                 // Set the time
@@ -148,6 +148,8 @@ namespace Harvester.Analysis
                 // What's the current running thread?
                 this.LastSwitch[core] = sw;
 
+                
+
                 // Add to our frame
                 frame.Increment(thread, state, elapsed);
             }
@@ -156,13 +158,50 @@ namespace Harvester.Analysis
             if (frame.Total == 0)
             {
                 var sw = this.LastSwitch[core];
-                var thread = sw.NewProcessId != process ? 0 : sw.NewThreadId;
+                var thread = EventThread.FromTrace(sw.NewThreadId, sw.NewProcessId, this.Process);
+
                 frame.Increment(thread, sw.State, maxTime);
             }
 
             //Console.WriteLine(frame.ToString());
 
+            // Get corresponding hardware counters 
+            frame.Counters = this.GetCounters(core, time, time + this.Interval);
             return frame;
+        }
+
+        /// <summary>
+        /// Gets the counters for the specified core and time period.
+        /// </summary>
+        /// <param name="core">The core number.</param>
+        /// <param name="from">The start time.</param>
+        /// <param name="to">The end time.</param>
+        /// <returns>The counters for that period.</returns>
+        protected TraceCounterCore GetCounters(int core, DateTime from, DateTime to)
+        {
+            // Get corresponding hardware counters
+            var counters = this.Counters
+                .Where(c => c.TIME >= from && c.TIME <= to)
+                .Select(c => c.Core[core]);
+            var count = counters.Count();
+            
+            // If we don't have anything, return zeroes
+            var hw = new TraceCounterCore();
+            if (count == 0)
+                return hw;
+
+            // Average or sum depending on the counter
+            hw.IPC = counters.Select(c => c.IPC).Average();
+            hw.FREQ = counters.Select(c => c.FREQ).Average();
+            hw.AFREQ = counters.Select(c => c.AFREQ).Average();
+            hw.L2MISS = counters.Select(c => c.L2MISS).Sum();
+            hw.L3MISS = counters.Select(c => c.L2MISS).Sum();
+            hw.L2HIT = counters.Select(c => c.L2HIT).Sum();
+            hw.L3HIT = counters.Select(c => c.L2HIT).Sum();
+            hw.L2CLK = counters.Select(c => c.L2CLK).Average();
+            hw.L3CLK = counters.Select(c => c.L3CLK).Average();
+
+            return hw;
         }
         #endregion
 
@@ -170,20 +209,21 @@ namespace Harvester.Analysis
         /// <summary>
         /// Invoked when an analysis needs to be performed.
         /// </summary>
-        protected abstract void OnAnalyze();
+        /// <returns>The ouptut of the analysis.</returns>
+        protected abstract EventOutput OnAnalyze();
 
         /// <summary>
         /// Analyzes the process
         /// </summary>
         /// <param name="processName"></param>
         /// <param name="interval"></param>
-        public void Analyze(string processName, ushort interval)
+        public EventOutput Analyze(string processName, ushort interval)
         {
             // First we need to gather frames
             this.Frames = this.GetFrames(processName, interval);
 
             Console.WriteLine("Analysis: Performing further analysis...");
-            this.OnAnalyze();
+            return this.OnAnalyze();
         }
         #endregion
     }

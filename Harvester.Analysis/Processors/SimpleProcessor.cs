@@ -10,7 +10,7 @@ namespace Harvester.Analysis
     /// <summary>
     /// Does a simple cache miss processing.
     /// </summary>
-    public class SimpleProcessor : ThreadProcessor
+    public class SimpleProcessor : EventProcessor
     {
         #region Constructor
                 /// <summary>
@@ -27,61 +27,45 @@ namespace Harvester.Analysis
         /// <summary>
         /// Invoked when an analysis needs to be performed.
         /// </summary>
-        protected override void OnAnalyze()
+        protected override EventOutput OnAnalyze()
         {
-            // Compute the average from the run before the process
-            var l1noise = 0.0;
-            var l2noise = 0.0;
-            var l3noise = 0.0;
-            try
-            {
-                l1noise = this.Counters.Where(t => t.TIME < this.Process.StartTime).Select(c => c.L2HIT + c.L2MISS).Average();
-                l2noise = this.Counters.Where(t => t.TIME < this.Process.StartTime).Select(c => c.L2MISS).Average();
-                l3noise = this.Counters.Where(t => t.TIME < this.Process.StartTime).Select(c => c.L3MISS).Average();
-            }
-            catch { } // Ignore, the noise will be just zero
-
-
+            // Here we will store our results
+            var output  = new EventOutput();
+            
             // Process every frame
             foreach(var frame in this.Frames)
             {
                 // Build some shortcuts
                 var core = frame.Core;
-                var timeFrom = frame.Time;
-                var timeTo   = frame.Time + frame.Duration;
-
-                // Get corresponding hardware counters 
-                var hw = this.GetCounters(core, timeFrom, timeTo);
                 
+                // Get corresponding hardware counters 
+                var hw = frame.Counters;
+
+                // Process every thread within this frame
+                foreach (var thread in frame.Threads)
+                {
+                    // Get the multiplier for that thread
+                    var multiplier = frame.GetShare(thread);
+
+
+                    output.Add("l1miss", frame, thread, Math.Round(multiplier * (hw.L2HIT + hw.L2MISS)));
+                    //output.Add("l2miss", frame, thread, Math.Round(multiplier * hw.L2MISS));
+                    //output.Add("l3miss", frame, thread, Math.Round(multiplier * hw.L3MISS));
+
+                    //output.Add("l2perf", frame, thread, hw.L2CLK);
+                    //output.Add("l3perf", frame, thread, hw.L3CLK);
+
+                    //output.Add("ipc", frame, thread, hw.IPC);
+
+                }
+     
             }
+
+
+            // Return the results
+            return output;
         }
 
 
-        private TraceCounterCore GetCounters(int core, DateTime from, DateTime to)
-        {
-            // Get corresponding hardware counters
-            var counters = this.Counters
-                .Where(c => c.TIME >= from && c.TIME <= to)
-                .Select(c => c.Core[core]);
-            var count = counters.Count();
-
-            // If we don't have anything, return zeroes
-            var hw = new TraceCounterCore();
-            if (count == 0)
-                return hw;
-
-            // Average or sum depending on the counter
-            hw.IPC = counters.Select(c => c.IPC).Average();
-            hw.FREQ = counters.Select(c => c.FREQ).Average();
-            hw.AFREQ = counters.Select(c => c.AFREQ).Average();
-            hw.L2MISS = counters.Select(c => c.L2MISS).Sum();
-            hw.L3MISS = counters.Select(c => c.L2MISS).Sum();
-            hw.L2HIT = counters.Select(c => c.L2HIT).Sum();
-            hw.L3HIT = counters.Select(c => c.L2HIT).Sum();
-            hw.L2CLK = counters.Select(c => c.L2CLK).Average();
-            hw.L3CLK = counters.Select(c => c.L3CLK).Average();
-
-            return hw;
-        }
     }
 }
