@@ -4,14 +4,14 @@ using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Lab.Tracing
+namespace Diagnostics.Tracing
 {
-    public class HardwareCounters
+    public class TraceCounter
     {
         /// <summary>
         /// Constructs a parsed entry.
         /// </summary>
-        public HardwareCounters(string[] line, int year, int month, int day)
+        public TraceCounter(string[] line, int year, int month, int day)
         {
             // The lenght of system-wide entry
             int systemLength = 20;
@@ -21,7 +21,7 @@ namespace Lab.Tracing
 
             // Calculate the number of cores we have in the file
             int cores = (line.Length - systemLength) / coreLength;
-            this.Core = new HardwareCountersCore[cores];
+            this.Core = new TraceCounterCore[cores];
 
             // Parse system-wide
             // TIME	EXEC	IPC	FREQ	AFREQ	L3MISS	L2MISS	L3HIT	L2HIT	L3CLK	L2CLK	READ	WRITE	INST	ACYC	TICKS	IPC	INST	MAXIPC
@@ -53,7 +53,7 @@ namespace Lab.Tracing
             for (int i = 0; i < cores; ++i)
             {
                 int offset = systemLength + (i * coreLength);
-                this.Core[i] = new HardwareCountersCore();
+                this.Core[i] = new TraceCounterCore();
                 this.Core[i].IPC = Double.Parse(line[offset], CultureInfo.InvariantCulture);
                 this.Core[i].FREQ = Double.Parse(line[offset + 1], CultureInfo.InvariantCulture);
                 this.Core[i].AFREQ = Double.Parse(line[offset + 2], CultureInfo.InvariantCulture);
@@ -86,9 +86,9 @@ namespace Lab.Tracing
         public readonly double RINST;
         public readonly long MAXIPC;
 
-        public readonly HardwareCountersCore[] Core;
+        public readonly TraceCounterCore[] Core;
 
-        public static IEnumerable<HardwareCounters> FromFile(string path, int year, int month, int day)
+        public static IEnumerable<TraceCounter> FromFile(string path, int year, int month, int day)
         {
             bool foundBeginning = false;
             using (var reader = new StreamReader(path, Encoding.UTF8))
@@ -104,7 +104,7 @@ namespace Lab.Tracing
                         continue;
                     }
 
-                    yield return new HardwareCounters(line.Split(';'), year, month, day);
+                    yield return new TraceCounter(line.Split(';'), year, month, day);
                 }
             }
         }

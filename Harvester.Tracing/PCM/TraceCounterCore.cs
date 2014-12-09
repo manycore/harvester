@@ -3,12 +3,12 @@ using System.Text;
 using System.IO;
 using System.Collections.Generic;
 
-namespace Lab.Tracing
+namespace Diagnostics.Tracing
 {
     /// <summary>
     /// Represents an entry for a particular core.
     /// </summary>
-	public class HardwareCountersCore
+	public class TraceCounterCore
 	{
         //C0@S0	C0@S0	C0@S0	C0@S0	C0@S0	C0@S0	C0@S0	C0@S0	C0@S0	C0@S0
         //IPC	FREQ	AFREQ	L3MISS	L2MISS	L3HIT	L2HIT	L3CLK	L2CLK	EXEC
@@ -16,7 +16,7 @@ namespace Lab.Tracing
         /// <summary>
         /// Constructs a parsed entry for a particular core.
         /// </summary>
-        public HardwareCountersCore()
+        public TraceCounterCore()
         {
 
         }

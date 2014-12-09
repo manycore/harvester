@@ -8,8 +8,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Harvester.Properties;
 using Diagnostics.Tracing;
-using Lab.Tracing;
 using System.Diagnostics;
+using Harvester.Analysis;
 
 namespace Harvester
 {
@@ -71,17 +71,34 @@ namespace Harvester
             // Get all context switches
             var switches = traceLog.Events
                 .Where(e => e.EventName.StartsWith("Thread/CSwitch"))
-                .Select(sw => new CSwitch(sw))
+                .Select(sw => new ContextSwitch(sw))
+                .ToArray();
+
+            var majorFaults = traceLog.Events
+                .Where(e => e.EventName.StartsWith("PageFault/HardPageFault"))
+                .Select(pf => new PageFault(pf))
+                .ToArray();
+
+            var minorFaults = traceLog.Events
+                .Where(e => e.EventName.StartsWith("PageFault/DemandZeroFault"))
+                .Select(pf => new PageFault(pf))
                 .ToArray();
 
             // Get all hardware counters
-            var counters = HardwareCounters.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
+            var counters = TraceCounter.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
                 .ToArray();
 
             // Get the time
             var timeStart = new DateTime(Math.Max(process.StartTime.Ticks, counters.First().TIME.Ticks)); //counters.First().TIME;
             var timeEnd = new DateTime(Math.Min(process.EndTime.Ticks, counters.Last().TIME.Ticks)); ;//counters.Last().TIME;
             var timeSpan = timeEnd - timeStart;
+
+            // Create a new experiment
+            var experiment = new Experiment(traceLog, counters);
+
+            // Upsample the experiment
+            experiment.Upsample(processName);
+
 
             // Create output
             var output = new HarvestOutput();
@@ -236,7 +253,7 @@ namespace Harvester
                             output.Add("l2perf", process.Name, "user", timeFrom.Ticks, threadShare * l2perf, threadID, process.ProcessID, coreID, 1);
                             output.Add("l3perf", process.Name, "user", timeFrom.Ticks, threadShare * l3perf, threadID, process.ProcessID, coreID, 1);
                             output.Add("ipc",    process.Name, "user", timeFrom.Ticks, threadShare * ipc   , threadID, process.ProcessID, coreID, 1);
-                                    
+                            
                         }
                     }
 

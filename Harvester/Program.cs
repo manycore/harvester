@@ -12,12 +12,12 @@ namespace Harvester
     {
         static void Main(string[] args)
         {
-            Collect("Matmul");
+            //Collect("Matmul");
 
             //Analyze("Matmul", "data/2014-12-8 16h 40m");
             //Analyze("Matmul", "data/Matmul - IJK");
             //Analyze("Matmul", "data/Matmul - KJI");
-            //Analyze("Matmul", "data/Matmul - KIJ");
+            Analyze("Matmul", "data/Matmul - KIJ");
 
 
             Console.WriteLine("Done.");
