@@ -274,6 +274,44 @@ void print_csv(PCM * m,
 
 }
 
+
+void print_simple(PCM * m,
+	const std::vector<CoreCounterState> & cstates1,
+	const std::vector<CoreCounterState> & cstates2,
+	const std::vector<SocketCounterState> & sktstate1,
+	const std::vector<SocketCounterState> & sktstate2,
+	const SystemCounterState& sstate1,
+	const SystemCounterState& sstate2,
+	const int cpu_model,
+	const bool show_core_output,
+	const bool show_socket_output,
+	const bool show_system_output
+	)
+{
+
+
+	if (show_system_output)
+	{
+		cout <<  "\n" << getL2CacheMisses(sstate1, sstate2);
+	}
+
+
+	/*if (show_core_output)
+	{
+		for (uint32 i = 0; i < m->getNumCores(); ++i)
+		{
+			if (cpu_model != PCM::ATOM)
+				cout << getL3CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
+				';';
+
+		}
+	}*/
+
+}
+
 int main(int argc, char * argv[])
 {
 #ifdef PCM_FORCE_SILENT

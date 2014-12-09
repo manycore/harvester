@@ -81,6 +81,9 @@ namespace Harvester
             this.Process.EnableRaisingEvents = true;
             this.Process.Start();
 
+            // We need to set it to realtime
+            this.Process.PriorityClass = ProcessPriorityClass.RealTime;
+
             if (stdRedirect)
             {
                 this.OutputThread = StartThread(new ThreadStart(WriteStandardOutput), "StandardOutput");
