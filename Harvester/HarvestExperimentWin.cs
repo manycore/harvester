@@ -97,7 +97,7 @@ namespace Harvester
             var experiment = new Experiment(traceLog, counters);
 
             // Upsample the experiment
-            experiment.Upsample(processName);
+            experiment.GetFrames(processName, 5);
 
 
             // Create output

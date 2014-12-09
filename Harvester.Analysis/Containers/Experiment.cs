@@ -37,7 +37,14 @@ namespace Harvester.Analysis
                 this.LastSwitch.Add(i, null);
         }
 
-        public void Upsample(string processName)
+        /// <summary>
+        /// Gets the sampling frames. This is used to analyze what the threads were doing 
+        /// and splits the data into workable fixed intervals.
+        /// </summary>
+        /// <param name="processName">The process to analyze.</param>
+        /// <param name="interval">The interval (in milliseconds) of a frame.</param>
+        /// <returns></returns>
+        public ThreadFrame[] GetFrames(string processName, ushort interval)
         {
             // Get the proces to monitor
             this.Process = this.TraceLog.Processes
@@ -52,7 +59,7 @@ namespace Harvester.Analysis
             this.Start = new DateTime(Math.Max(this.Process.StartTime.Ticks, this.Counters.First().TIME.Ticks));
             this.End = new DateTime(Math.Min(this.Process.EndTime.Ticks, this.Counters.Last().TIME.Ticks));
             this.Duration = this.End - this.Start;
-            this.Interval = TimeSpan.FromMilliseconds(5);
+            this.Interval = TimeSpan.FromMilliseconds(interval);
             this.Count = (int)Math.Ceiling(this.Duration.TotalMilliseconds / this.Interval.TotalMilliseconds);
 
             Console.WriteLine("Analysis: Analyzing {0} process with {1} threads.", this.Process.Name, this.Threads.Length);
@@ -60,7 +67,6 @@ namespace Harvester.Analysis
             Console.WriteLine("Analysis: interval = {0} ms.", this.Interval.TotalMilliseconds);
             Console.WriteLine("Analysis: #samples = {0}", Count);
             Console.WriteLine("Analysis: #cores = {0}", CoreCount);
-
             
             // Get all context switches
             var switches = this.TraceLog.Events
@@ -68,11 +74,15 @@ namespace Harvester.Analysis
                 .Select(sw => new ContextSwitch(sw))
                 .ToArray();
 
+            // The list for our results
+            var result = new List<ThreadFrame>();
+
             // Upsample at the specified interval
             for (int i = 0; i < this.Count; ++i)
             {
                 // Current time
                 var t = (int)this.Interval.TotalMilliseconds * i;
+                Console.WriteLine("Analysis: Analyzing frame #{0}...", i);
 
                 // The interval starting time
                 var timeFrom = this.Start + TimeSpan.FromMilliseconds(t);
@@ -90,24 +100,31 @@ namespace Harvester.Analysis
                         .Where(e => e.TimeStamp >= timeFrom && e.TimeStamp <= timeTo)
                         .Where(e => e.ProcessorNumber == core)
                         .OrderBy(e => e.TimeStamp100ns);
+                    // Console.WriteLine("Analysis: t = {0}, core = {1}, #hw = {2}, #cs = {3}", t, core, hw.Count(), cs.Count());
 
-
-                    //Console.WriteLine("Analysis: t = {0}, core = {1}, #hw = {2}, #cs = {3}", t, core, hw.Count(), cs.Count());
-
-                    GetProportion(timeFrom, core, cs, hw);
+                    // Get an individual frame
+                    result.Add(
+                        GetFrame(timeFrom, core, cs, hw)
+                        );
                 }
-
             }
+
+            // Return the resulting frames
+            return result.ToArray();
         }
 
-        private ThreadFrame GetProportion(DateTime time, int core, IEnumerable<ContextSwitch> switches, IEnumerable<TraceCounter> counters)
+        /// <summary>
+        /// Gets one frame.
+        /// </summary>
+        private ThreadFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches, IEnumerable<TraceCounter> counters)
         {
             // We got some events, calculate the proportion
             var fileTime = time.ToFileTime();
             var process  = this.Process.ProcessID;
             var maxTime  = (double)(this.Interval.TotalMilliseconds * 10000);
 
-            var set = new ThreadFrame();
+            // Construct a new frame
+            var frame = new ThreadFrame(time, this.Interval, core);
             var previous = 0L;
 
             foreach (var sw in switches)
@@ -132,27 +149,20 @@ namespace Harvester.Analysis
                     tid = 0;
 
                 // Add to our set
-                set.Increment(tid, state, elapsed);
-
+                frame.Increment(tid, state, elapsed);
             }
 
             // If there was no switches during this period of time, take the last running
-            if (set.Total == 0)
+            if (frame.Total == 0)
             {
                 var sw = this.LastSwitch[core];
                 var thread = sw.NewProcessId != process ? 0 : sw.NewThreadId;
-                set.Increment(thread, sw.State, maxTime);
+                frame.Increment(thread, sw.State, maxTime);
             }
 
-            // Calculate a percentage instead of cpu time
-            //var kvp = threadWork.ToArray();
-            //foreach (var kv in kvp)
-            //    threadWork[kv.Key] = kv.Value / totalWork;
+            //Console.WriteLine(frame.ToString());
 
-
-            Console.WriteLine(set.ToString());
-
-            return set;
+            return frame;
         }
 
     }
