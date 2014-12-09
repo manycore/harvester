@@ -37,12 +37,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Containers\Experiment.cs" />
-    <Compile Include="Containers\ThreadFrame.cs" />
-    <Compile Include="Containers\TimeSeries.cs" />
-    <Compile Include="Containers\Thread.cs" />
-    <Compile Include="Events\ContextSwitch.cs" />
-    <Compile Include="Events\PageFault.cs" />
+    <Compile Include="Diagnostics\ThreadProcessor.cs" />
+    <Compile Include="Diagnostics\ThreadFrame.cs" />
+    <Compile Include="Diagnostics\TimeSeries.cs" />
+    <Compile Include="Diagnostics\Thread.cs" />
+    <Compile Include="Diagnostics\Events\ContextSwitch.cs" />
+    <Compile Include="Diagnostics\Events\PageFault.cs" />
+    <Compile Include="Processors\SimpleProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

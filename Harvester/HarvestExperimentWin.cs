@@ -94,10 +94,10 @@ namespace Harvester
             var timeSpan = timeEnd - timeStart;
 
             // Create a new experiment
-            var experiment = new Experiment(traceLog, counters);
+            var experiment = new SimpleProcessor(traceLog, counters);
 
-            // Upsample the experiment
-            experiment.GetFrames(processName, 5);
+            // Analyze
+            experiment.Analyze(processName, 5);
 
 
             // Create output

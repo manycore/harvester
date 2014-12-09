@@ -9,23 +9,34 @@ using System.Threading.Tasks;
 
 namespace Harvester.Analysis
 {
-    public class Experiment
+    /// <summary>
+    /// Represents a base class that can performm resampling and transforms
+    /// the trace & hardware counters data into queryable data.
+    /// </summary>
+    public abstract class ThreadProcessor
     {
-        public readonly TraceLog TraceLog;
-        public readonly TraceCounter[] Counters;
-        public readonly Dictionary<int, ContextSwitch> LastSwitch =
+        #region Constructors
+        protected readonly TraceLog TraceLog;
+        protected readonly TraceCounter[] Counters;
+        private readonly Dictionary<int, ContextSwitch> LastSwitch =
             new Dictionary<int, ContextSwitch>();
 
-        public DateTime Start;
-        public DateTime End;
-        public TimeSpan Duration;
-        public TimeSpan Interval;
-        public int Count;
-        public int CoreCount;
-        public TraceProcess Process;
-        public TraceThread[] Threads;
+        protected DateTime Start;
+        protected DateTime End;
+        protected TimeSpan Duration;
+        protected TimeSpan Interval;
+        protected int Count;
+        protected int CoreCount;
+        protected TraceProcess Process;
+        protected TraceThread[] Threads;
+        protected ThreadFrame[] Frames;
 
-        public Experiment(TraceLog events, TraceCounter[] counters)
+        /// <summary>
+        /// Constructs a new processor for the provided data files.
+        /// </summary>
+        /// <param name="events">The data file containing events.</param>
+        /// <param name="counters">The data file containing harware coutnters.</param>
+        public ThreadProcessor(TraceLog events, TraceCounter[] counters)
         {
             // Add our data sources
             this.TraceLog = events;
@@ -36,7 +47,9 @@ namespace Harvester.Analysis
             for (int i = 0; i < this.CoreCount; ++i)
                 this.LastSwitch.Add(i, null);
         }
+        #endregion
 
+        #region Frame Members
         /// <summary>
         /// Gets the sampling frames. This is used to analyze what the threads were doing 
         /// and splits the data into workable fixed intervals.
@@ -44,7 +57,7 @@ namespace Harvester.Analysis
         /// <param name="processName">The process to analyze.</param>
         /// <param name="interval">The interval (in milliseconds) of a frame.</param>
         /// <returns></returns>
-        public ThreadFrame[] GetFrames(string processName, ushort interval)
+        private ThreadFrame[] GetFrames(string processName, ushort interval)
         {
             // Get the proces to monitor
             this.Process = this.TraceLog.Processes
@@ -64,9 +77,8 @@ namespace Harvester.Analysis
 
             Console.WriteLine("Analysis: Analyzing {0} process with {1} threads.", this.Process.Name, this.Threads.Length);
             Console.WriteLine("Analysis: duration = {0}", this.Duration);
-            Console.WriteLine("Analysis: interval = {0} ms.", this.Interval.TotalMilliseconds);
-            Console.WriteLine("Analysis: #samples = {0}", Count);
             Console.WriteLine("Analysis: #cores = {0}", CoreCount);
+            Console.WriteLine("Analysis: Creating #{0} frames for {1}ms. interval...", this.Count, this.Interval.TotalMilliseconds);
             
             // Get all context switches
             var switches = this.TraceLog.Events
@@ -82,15 +94,10 @@ namespace Harvester.Analysis
             {
                 // Current time
                 var t = (int)this.Interval.TotalMilliseconds * i;
-                Console.WriteLine("Analysis: Analyzing frame #{0}...", i);
-
+               
                 // The interval starting time
                 var timeFrom = this.Start + TimeSpan.FromMilliseconds(t);
                 var timeTo = this.Start + TimeSpan.FromMilliseconds(t) + this.Interval;
-
-                // Get corresponding hardware counters
-                var hw = this.Counters
-                    .Where(c => c.TIME >= timeFrom && c.TIME <= timeTo);
 
                 // For each core
                 for (int core = 0; core < this.CoreCount; ++core)
@@ -104,7 +111,7 @@ namespace Harvester.Analysis
 
                     // Get an individual frame
                     result.Add(
-                        GetFrame(timeFrom, core, cs, hw)
+                        GetFrame(timeFrom, core, cs)
                         );
                 }
             }
@@ -116,7 +123,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// Gets one frame.
         /// </summary>
-        private ThreadFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches, IEnumerable<TraceCounter> counters)
+        private ThreadFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches)
         {
             // We got some events, calculate the proportion
             var fileTime = time.ToFileTime();
@@ -130,26 +137,19 @@ namespace Harvester.Analysis
             foreach (var sw in switches)
             {
                 // Old thread id & process id
-                var tid = sw.OldThreadId;
-                var pid = sw.OldProcessId;
-                var ntid = sw.NewThreadId;
-                var npid = sw.NewProcessId;
+                var thread = sw.OldProcessId != process ? 0 : sw.OldThreadId;
                 var state = sw.State;
 
+                // Set the time
                 var current = sw.TimeStamp100ns - fileTime;
                 var elapsed = current - previous;
                 previous = current;
 
                 // What's the current running thread?
                 this.LastSwitch[core] = sw;
-                //Console.WriteLine(sw);
 
-                // Put everything else in 0
-                if (pid != process)
-                    tid = 0;
-
-                // Add to our set
-                frame.Increment(tid, state, elapsed);
+                // Add to our frame
+                frame.Increment(thread, state, elapsed);
             }
 
             // If there was no switches during this period of time, take the last running
@@ -164,6 +164,29 @@ namespace Harvester.Analysis
 
             return frame;
         }
+        #endregion
 
+        #region Analyze Members
+        /// <summary>
+        /// Invoked when an analysis needs to be performed.
+        /// </summary>
+        protected abstract void OnAnalyze();
+
+        /// <summary>
+        /// Analyzes the process
+        /// </summary>
+        /// <param name="processName"></param>
+        /// <param name="interval"></param>
+        public void Analyze(string processName, ushort interval)
+        {
+            // First we need to gather frames
+            this.Frames = this.GetFrames(processName, interval);
+
+            Console.WriteLine("Analysis: Performing further analysis...");
+            this.OnAnalyze();
+        }
+        #endregion
     }
+
+
 }
