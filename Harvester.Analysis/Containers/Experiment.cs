@@ -13,8 +13,8 @@ namespace Harvester.Analysis
     {
         public readonly TraceLog TraceLog;
         public readonly TraceCounter[] Counters;
-        public readonly Dictionary<int, int> LastSwitch =
-            new Dictionary<int, int>();
+        public readonly Dictionary<int, ContextSwitch> LastSwitch =
+            new Dictionary<int, ContextSwitch>();
 
         public DateTime Start;
         public DateTime End;
@@ -30,10 +30,11 @@ namespace Harvester.Analysis
             // Add our data sources
             this.TraceLog = events;
             this.Counters = counters;
+            this.CoreCount = this.Counters[0].Core.Length;
 
             // A last switch per core
-            for (int coreID = 0; coreID < counters[0].Core.Length; ++coreID)
-                this.LastSwitch.Add(coreID, 0);
+            for (int i = 0; i < this.CoreCount; ++i)
+                this.LastSwitch.Add(i, null);
         }
 
         public void Upsample(string processName)
@@ -53,8 +54,6 @@ namespace Harvester.Analysis
             this.Duration = this.End - this.Start;
             this.Interval = TimeSpan.FromMilliseconds(5);
             this.Count = (int)Math.Ceiling(this.Duration.TotalMilliseconds / this.Interval.TotalMilliseconds);
-            this.CoreCount = this.Counters[0].Core.Length;
-
 
             Console.WriteLine("Analysis: Analyzing {0} process with {1} threads.", this.Process.Name, this.Threads.Length);
             Console.WriteLine("Analysis: duration = {0}", this.Duration);
@@ -101,23 +100,15 @@ namespace Harvester.Analysis
             }
         }
 
-        private Dictionary<int, double> GetProportion(DateTime time, int core, IEnumerable<ContextSwitch> switches, IEnumerable<TraceCounter> counters)
+        private ThreadFrame GetProportion(DateTime time, int core, IEnumerable<ContextSwitch> switches, IEnumerable<TraceCounter> counters)
         {
             // We got some events, calculate the proportion
             var fileTime = time.ToFileTime();
             var process  = this.Process.ProcessID;
             var maxTime  = (double)(this.Interval.TotalMilliseconds * 10000);
 
-            var set = new ThreadSet();
-            var threadWork = new Dictionary<int, double>();
-            threadWork.Add(0, 0);
-            foreach (var thread in this.Threads)
-                threadWork.Add(thread.ThreadID, 0);
-
-            double totalWork = 0;
-            long timeMarker = 0;
-
-            long previous = 0;
+            var set = new ThreadFrame();
+            var previous = 0L;
 
             foreach (var sw in switches)
             {
@@ -132,47 +123,25 @@ namespace Harvester.Analysis
                 var elapsed = current - previous;
                 previous = current;
 
-
-                set.Add(tid, state, elapsed);
+                // What's the current running thread?
+                this.LastSwitch[core] = sw;
                 //Console.WriteLine(sw);
-                
-                /*if (state != ThreadState.Running)
-                {
-                    
-                    // Last time we started
-                    timeMarker = previous;
 
-                    // Currently running thread
-                    this.LastSwitch[core] = npid != process ? 0 : ntid;
-                }
-                else
-                {
-                    var runningTime = previous - timeMarker;
-                    set.Add(tid, state, runningTime);
+                // Put everything else in 0
+                if (pid != process)
+                    tid = 0;
 
-                    //Console.WriteLine("time={0}, run={6}, {5}, pid={1} tid={2} npid={3} ntid={4} ", elapsed, pid, tid, npid, ntid, state, runningTime);
+                // Add to our set
+                set.Increment(tid, state, elapsed);
 
-                    if (pid != process)
-                    {
-                        // System
-                        threadWork[0] += runningTime;
-                        totalWork += runningTime;
-                    }
-                    else
-                    {
-                        // Our target thread
-                        threadWork[tid] += runningTime;
-                        totalWork += runningTime;
-                    }
-                }*/
             }
 
             // If there was no switches during this period of time, take the last running
-            if (totalWork == 0)
+            if (set.Total == 0)
             {
-                var runningThread = this.LastSwitch[core];
-                threadWork[runningThread] = maxTime;
-                totalWork = maxTime;
+                var sw = this.LastSwitch[core];
+                var thread = sw.NewProcessId != process ? 0 : sw.NewThreadId;
+                set.Increment(thread, sw.State, maxTime);
             }
 
             // Calculate a percentage instead of cpu time
@@ -180,14 +149,11 @@ namespace Harvester.Analysis
             //foreach (var kv in kvp)
             //    threadWork[kv.Key] = kv.Value / totalWork;
 
-            Console.WriteLine(threadWork.Values
-                    .Select(v => v.ToString("N2"))
-                    .Aggregate((a, b) => a + ", " + b)
-                );
 
             Console.WriteLine(set.ToString());
 
-            return threadWork;
+            return set;
         }
+
     }
 }

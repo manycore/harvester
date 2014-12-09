@@ -38,7 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Containers\Experiment.cs" />
-    <Compile Include="Containers\ThreadSet.cs" />
+    <Compile Include="Containers\ThreadFrame.cs" />
     <Compile Include="Containers\TimeSeries.cs" />
     <Compile Include="Containers\Thread.cs" />
     <Compile Include="Events\ContextSwitch.cs" />
