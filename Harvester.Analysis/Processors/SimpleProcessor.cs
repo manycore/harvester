@@ -48,9 +48,9 @@ namespace Harvester.Analysis
                     var multiplier = frame.GetShare(thread);
 
 
-                    output.Add("l1miss", frame, thread, Math.Round(multiplier * (hw.L2HIT + hw.L2MISS)));
-                    //output.Add("l2miss", frame, thread, Math.Round(multiplier * hw.L2MISS));
-                    //output.Add("l3miss", frame, thread, Math.Round(multiplier * hw.L3MISS));
+                    output.Add("l1miss", frame, thread, Math.Round(multiplier * hw.L1Misses));
+                    //output.Add("l2miss", frame, thread, Math.Round(multiplier * hw.L2Misses));
+                    //output.Add("l3miss", frame, thread, Math.Round(multiplier * hw.L3Misses));
 
                     //output.Add("l2perf", frame, thread, hw.L2CLK);
                     //output.Add("l3perf", frame, thread, hw.L3CLK);

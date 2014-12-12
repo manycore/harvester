@@ -45,7 +45,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// Gets the hardware counters for this frame.
         /// </summary>
-        public TraceCounterCore Counters
+        public EventCounters Counters
         {
             get;
             set;

@@ -177,31 +177,49 @@ namespace Harvester.Analysis
         /// <param name="from">The start time.</param>
         /// <param name="to">The end time.</param>
         /// <returns>The counters for that period.</returns>
-        protected TraceCounterCore GetCounters(int core, DateTime from, DateTime to)
+        protected virtual EventCounters GetCounters(int core, DateTime from, DateTime to)
         {
             // Get corresponding hardware counters
-            var counters = this.Counters
+            var hardware = this.Counters
                 .Where(c => c.TIME >= from && c.TIME <= to)
                 .Select(c => c.Core[core]);
-            var count = counters.Count();
+            var hwcount = hardware.Count();
             
             // If we don't have anything, return zeroes
-            var hw = new TraceCounterCore();
-            if (count == 0)
-                return hw;
+            var counters = new EventCounters();
+
+            // Get the number of minor page faults
+            counters.MinorPageFaults = this.Process.EventsInProcess
+                .Where(e => e.EventName.StartsWith("PageFault/DemandZeroFault"))
+                .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
+                .Where(e => e.ProcessorNumber == core)
+                .Count();
+
+            /// Get the number of major page faults
+            counters.MajorPageFaults = this.Process.EventsInProcess
+                .Where(e => e.EventName.StartsWith("PageFault/HardPageFault"))
+                .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
+                .Where(e => e.ProcessorNumber == core)
+                .Count();
+
+            // If we harve hardware counters
+            if (hwcount == 0)
+                return counters;
 
             // Average or sum depending on the counter
-            hw.IPC = counters.Select(c => c.IPC).Average();
-            hw.FREQ = counters.Select(c => c.FREQ).Average();
-            hw.AFREQ = counters.Select(c => c.AFREQ).Average();
-            hw.L2MISS = counters.Select(c => c.L2MISS).Sum();
-            hw.L3MISS = counters.Select(c => c.L2MISS).Sum();
-            hw.L2HIT = counters.Select(c => c.L2HIT).Sum();
-            hw.L3HIT = counters.Select(c => c.L2HIT).Sum();
-            hw.L2CLK = counters.Select(c => c.L2CLK).Average();
-            hw.L3CLK = counters.Select(c => c.L3CLK).Average();
+            counters.IPC = hardware.Select(c => c.IPC).Average();
+            counters.L2Misses = hardware.Select(c => c.L2MISS).Sum();
+            counters.L3Misses = hardware.Select(c => c.L2MISS).Sum();
+            counters.L2Hits = hardware.Select(c => c.L2HIT).Sum();
+            counters.L3Hits = hardware.Select(c => c.L2HIT).Sum();
+            counters.L2Clock = hardware.Select(c => c.L2CLK).Average();
+            counters.L3Clock = hardware.Select(c => c.L3CLK).Average();
 
-            return hw;
+            // Computed
+            counters.L1Misses = counters.L2Misses + counters.L2Hits;
+
+
+            return counters;
         }
         #endregion
 
