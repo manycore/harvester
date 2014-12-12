@@ -30,6 +30,7 @@ namespace Harvester.Analysis
         protected TraceProcess Process;
         protected TraceThread[] Threads;
         protected EventFrame[] Frames;
+        protected PageFault[] Faults;
 
         /// <summary>
         /// Constructs a new processor for the provided data files.
@@ -84,6 +85,12 @@ namespace Harvester.Analysis
             var switches = this.TraceLog.Events
                 .Where(e => e.EventName.StartsWith("Thread/CSwitch"))
                 .Select(sw => new ContextSwitch(sw))
+                .ToArray();
+
+            // Gets all page faults 
+            this.Faults = this.TraceLog.Events
+                .Where(e => e.EventName.StartsWith("PageFault"))
+                .Select(e => new PageFault(e))
                 .ToArray();
 
             // The list for our results
@@ -167,6 +174,9 @@ namespace Harvester.Analysis
 
             // Get corresponding hardware counters 
             frame.Counters = this.GetCounters(core, time, time + this.Interval);
+
+
+
             return frame;
         }
 
@@ -189,18 +199,19 @@ namespace Harvester.Analysis
             var counters = new EventCounters();
 
             // Get the number of minor page faults
-            counters.MinorPageFaults = this.Process.EventsInProcess
-                .Where(e => e.EventName.StartsWith("PageFault/DemandZeroFault"))
+            counters.MinorPageFaults = this.Faults
+                .Where(e => e.Process == this.Process.ProcessID)
                 .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
                 .Where(e => e.ProcessorNumber == core)
                 .Count();
 
             /// Get the number of major page faults
-            counters.MajorPageFaults = this.Process.EventsInProcess
-                .Where(e => e.EventName.StartsWith("PageFault/HardPageFault"))
+            counters.MajorPageFaults = this.Faults
+                .Where(e => e.Process == this.Process.ProcessID)
                 .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
                 .Where(e => e.ProcessorNumber == core)
                 .Count();
+
 
             // If we harve hardware counters
             if (hwcount == 0)
@@ -217,7 +228,6 @@ namespace Harvester.Analysis
 
             // Computed
             counters.L1Misses = counters.L2Misses + counters.L2Hits;
-
 
             return counters;
         }

@@ -10,27 +10,67 @@ namespace Harvester.Analysis
 
     public sealed class PageFault 
     {
-        public PageFault(TraceEvent sw)
+        public PageFault(TraceEvent ev)
         {
-            sw.GetType();
-            // Old thread id & process id
-            /*this.OldThreadId = (int)sw.PayloadValue(0);
-            this.OldProcessId = (int)sw.PayloadValue(1);
-            this.NewThreadId = (int)sw.PayloadValue(3);
-            this.NewProcessId = (int)sw.PayloadValue(4);
-            this.State = (ThreadState)sw.PayloadValue(13);
-            this.ProcessorNumber = sw.ProcessorNumber;
-            this.TimeStamp = sw.TimeStamp;
-            this.TimeStamp100ns = sw.TimeStamp100ns;*/
+            switch (ev.EventName)
+            {
+                case "PageFault/DemandZeroFault": this.Type = PageFaultType.Minor; break;
+                case "PageFault/HardPageFault": this.Type = PageFaultType.Major; break;
+                case "PageFault/HardFault": this.Type = PageFaultType.Major; break;
+
+                default: this.Type = PageFaultType.Unknown; break;
+            }
+
+            this.TimeStamp = ev.TimeStamp;
+            this.ProcessorNumber = ev.ProcessorNumber;
+            this.Process = ev.ProcessID;
+            this.Thread = ev.ThreadID;
         }
 
-        /*public readonly int OldThreadId;
-        public readonly int OldProcessId;
-        public readonly int NewThreadId;
-        public readonly int NewProcessId;
-        public readonly int ProcessorNumber;
-        public readonly ThreadState State;
+        /// <summary>
+        /// Gets or sets the type of the page fault.
+        /// </summary>
+        public readonly PageFaultType Type;
+
+        /// <summary>
+        /// Gets the timestamp of the event.
+        /// </summary>
         public readonly DateTime TimeStamp;
-        public readonly long TimeStamp100ns;*/
+
+        /// <summary>
+        /// Gets the processor number of the event.
+        /// </summary>
+        public readonly int ProcessorNumber;
+
+        /// <summary>
+        /// Gets the process of the event.
+        /// </summary>
+        public readonly int Process;
+
+        /// <summary>
+        /// Gets the thread of the event.
+        /// </summary>
+        public readonly int Thread;
+    }
+
+    /// <summary>
+    /// The type of the page fault.
+    /// </summary>
+    public enum PageFaultType
+    {
+        /// <summary>
+        /// Unknown type of page fault.
+        /// </summary>
+        Unknown = 0,
+
+        /// <summary>
+        /// Minor (demand zero) page fault.
+        /// </summary>
+        Minor = 1,
+
+        /// <summary>
+        /// Major (hard) page fault.
+        /// </summary>
+        Major = 2
     }
 }
