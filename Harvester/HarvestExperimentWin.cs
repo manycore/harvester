@@ -92,7 +92,7 @@ namespace Harvester
             var experiment = new SimpleProcessor(traceLog, counters);
 
             // Analyze
-            var output =  experiment.Analyze(processName, 100);
+            var output =  experiment.Analyze(processName, 10);
 
             // Write the output
             output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));

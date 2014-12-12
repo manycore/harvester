@@ -170,15 +170,26 @@ namespace Harvester.Analysis
                 frame.Increment(thread, sw.State, maxTime);
             }
 
-            //Console.WriteLine(frame.ToString());
 
             // Get corresponding hardware counters 
-            frame.Counters = this.GetCounters(core, time, time + this.Interval);
+            frame.HwCounters = this.GetCounters(core, time, time + this.Interval);
 
-
+            // Get the page faults within this frame
+            frame.PageFaults = this.GetPageFaults(core, time, time + this.Interval);
 
             return frame;
         }
+
+        
+        protected virtual PageFault[] GetPageFaults(int core, DateTime from, DateTime to)
+        {
+            return this.Faults
+                .Where(e => e.Process == this.Process.ProcessID)
+                .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
+                .Where(e => e.ProcessorNumber == core)
+                .ToArray();
+        }
+
 
         /// <summary>
         /// Gets the counters for the specified core and time period.
@@ -187,8 +198,14 @@ namespace Harvester.Analysis
         /// <param name="from">The start time.</param>
         /// <param name="to">The end time.</param>
         /// <returns>The counters for that period.</returns>
-        protected virtual EventCounters GetCounters(int core, DateTime from, DateTime to)
+        protected virtual EventHwCounters GetCounters(int core, DateTime from, DateTime to)
         {
+            // The total duration of the hw counter samples we have
+            var duration = this.Counters
+                .Where(c => c.TIME >= from && c.TIME <= to)
+                .Select(c => c.Duration)
+                .Sum();
+
             // Get corresponding hardware counters
             var hardware = this.Counters
                 .Where(c => c.TIME >= from && c.TIME <= to)
@@ -196,33 +213,21 @@ namespace Harvester.Analysis
             var hwcount = hardware.Count();
             
             // If we don't have anything, return zeroes
-            var counters = new EventCounters();
-
-            // Get the number of minor page faults
-            counters.MinorPageFaults = this.Faults
-                .Where(e => e.Process == this.Process.ProcessID)
-                .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
-                .Where(e => e.ProcessorNumber == core)
-                .Count();
-
-            /// Get the number of major page faults
-            counters.MajorPageFaults = this.Faults
-                .Where(e => e.Process == this.Process.ProcessID)
-                .Where(e => e.TimeStamp >= from && e.TimeStamp <= to)
-                .Where(e => e.ProcessorNumber == core)
-                .Count();
+            var counters = new EventHwCounters();
 
 
             // If we harve hardware counters
             if (hwcount == 0)
                 return counters;
 
+            // Absolute numbers
+            counters.L2Misses = (long)((hardware.Select(c => c.L2MISS).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L3Misses = (long)((hardware.Select(c => c.L3MISS).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L2Hits = (long)((hardware.Select(c => c.L2HIT).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L3Hits = (long)((hardware.Select(c => c.L3HIT).Sum() / duration) * this.Interval.TotalMilliseconds);
+
             // Average or sum depending on the counter
             counters.IPC = hardware.Select(c => c.IPC).Average();
-            counters.L2Misses = hardware.Select(c => c.L2MISS).Sum();
-            counters.L3Misses = hardware.Select(c => c.L2MISS).Sum();
-            counters.L2Hits = hardware.Select(c => c.L2HIT).Sum();
-            counters.L3Hits = hardware.Select(c => c.L2HIT).Sum();
             counters.L2Clock = hardware.Select(c => c.L2CLK).Average();
             counters.L3Clock = hardware.Select(c => c.L3CLK).Average();
 

@@ -9,7 +9,7 @@ namespace Harvester.Analysis
     /// <summary>
     /// Represents the combined event counters.
     /// </summary>
-    public class EventCounters
+    public class EventHwCounters
     {
         /// <summary>
         /// Gets or sets the instructions per cycle ratio.
@@ -51,15 +51,6 @@ namespace Harvester.Analysis
         /// </summary>
         public double L2Clock;
 
-        /// <summary>
-        /// Gets or sets the number of minor page faults.
-        /// </summary>
-        public long MinorPageFaults;
-
-        /// <summary>
-        /// Gets or sets the number of major page faults.
-        /// </summary>
-        public long MajorPageFaults;
     }
 
 

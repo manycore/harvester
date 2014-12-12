@@ -11,7 +11,7 @@ namespace Diagnostics.Tracing
         /// <summary>
         /// Constructs a parsed entry.
         /// </summary>
-        public TraceCounter(string[] line, int year, int month, int day)
+        private TraceCounter(string[] line, int year, int month, int day, DateTime previousTime)
         {
             // The lenght of system-wide entry
             int systemLength = 20;
@@ -26,9 +26,7 @@ namespace Diagnostics.Tracing
             // Parse system-wide
             // TIME	EXEC	IPC	FREQ	AFREQ	L3MISS	L2MISS	L3HIT	L2HIT	L3CLK	L2CLK	READ	WRITE	INST	ACYC	TICKS	IPC	INST	MAXIPC
 
-            var time = line[0].Split(':');
-            this.TIME = new DateTime(year, month, day,
-                int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]), int.Parse(time[3]));
+            this.TIME = ParseTime(line[0], year, month, day);
 
             this.EXEC = Double.Parse(line[1], CultureInfo.InvariantCulture);
             this.IPC = Double.Parse(line[2], CultureInfo.InvariantCulture);
@@ -64,6 +62,11 @@ namespace Diagnostics.Tracing
                 this.Core[i].L3CLK = Double.Parse(line[offset + 7], CultureInfo.InvariantCulture);
                 this.Core[i].L2CLK = Double.Parse(line[offset + 8], CultureInfo.InvariantCulture);
             }
+
+            // Calculate the duration
+            this.Duration = previousTime != DateTime.MinValue
+                ? (this.TIME - previousTime).TotalMilliseconds
+                : 2d;
         }
 
         public readonly DateTime TIME;
@@ -86,14 +89,27 @@ namespace Diagnostics.Tracing
         public readonly double RINST;
         public readonly long MAXIPC;
 
+        /// <summary>
+        /// The duration over which the counters were calculated, in milliseconds
+        /// </summary>
+        public double Duration;
+
+        /// <summary>
+        /// The specific counters for each core.
+        /// </summary>
         public readonly TraceCounterCore[] Core;
 
+        /// <summary>
+        /// Read the hardware counters from file.
+        /// </summary>
         public static IEnumerable<TraceCounter> FromFile(string path, int year, int month, int day)
         {
-            bool foundBeginning = false;
+            var foundBeginning = false;
+            var previousTime = DateTime.MinValue;
             using (var reader = new StreamReader(path, Encoding.UTF8))
             {
-                string line; int idx = 0;
+                string line; 
+                var idx = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
                     ++idx;
@@ -104,10 +120,26 @@ namespace Diagnostics.Tracing
                         continue;
                     }
 
-                    yield return new TraceCounter(line.Split(';'), year, month, day);
+                    // Parse one line
+                    var csv = line.Split(';');
+                    yield return new TraceCounter(csv, year, month, day, previousTime);
+
+                    // Set the previous time
+                    previousTime = ParseTime(csv[0], year, month, day);
                 }
             }
         }
+
+        /// <summary>
+        /// Parses the time in the CSV file.
+        /// </summary>
+        private static DateTime ParseTime(string text, int year, int month, int day)
+        {
+            var time = text.Split(':');
+            return new DateTime(year, month, day,
+                int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]), int.Parse(time[3]));
+        }
+
     }
 }
 

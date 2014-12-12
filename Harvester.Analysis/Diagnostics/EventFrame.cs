@@ -45,7 +45,16 @@ namespace Harvester.Analysis
         /// <summary>
         /// Gets the hardware counters for this frame.
         /// </summary>
-        public EventCounters Counters
+        public EventHwCounters HwCounters
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the page fault events within this frame.
+        /// </summary>
+        public PageFault[] PageFaults
         {
             get;
             set;

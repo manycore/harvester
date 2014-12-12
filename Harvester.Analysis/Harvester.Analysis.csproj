@@ -37,7 +37,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Diagnostics\EventCounters.cs" />
+    <Compile Include="Diagnostics\EventHwCounters.cs" />
     <Compile Include="Diagnostics\EventEntry.cs" />
     <Compile Include="Diagnostics\EventThread.cs" />
     <Compile Include="Diagnostics\EventProcessor.cs" />

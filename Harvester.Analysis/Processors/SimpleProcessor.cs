@@ -39,7 +39,7 @@ namespace Harvester.Analysis
                 var core = frame.Core;
                 
                 // Get corresponding hardware counters 
-                var hw = frame.Counters;
+                var cn = frame.HwCounters;
 
                 // Process every thread within this frame
                 foreach (var thread in frame.Threads)
@@ -47,15 +47,28 @@ namespace Harvester.Analysis
                     // Get the multiplier for that thread
                     var multiplier = frame.GetShare(thread);
 
+                    // Get the number of demand zero faults.
+                    var dzf = frame.PageFaults
+                        .Where(pf => pf.Type == PageFaultType.Minor)
+                        .Where(pf => pf.Thread == thread.Tid && pf.Process == thread.Pid)
+                        .Count();
 
-                    output.Add("l1miss", frame, thread, Math.Round(multiplier * hw.L1Misses));
-                    //output.Add("l2miss", frame, thread, Math.Round(multiplier * hw.L2Misses));
-                    //output.Add("l3miss", frame, thread, Math.Round(multiplier * hw.L3Misses));
+                    // Get the number of har" page faults.
+                    var hpf = frame.PageFaults
+                        .Where(pf => pf.Type == PageFaultType.Major)
+                        .Where(pf => pf.Thread == thread.Tid && pf.Process == thread.Pid)
+                        .Count();
 
-                    //output.Add("l2perf", frame, thread, hw.L2CLK);
-                    //output.Add("l3perf", frame, thread, hw.L3CLK);
+                    output.Add("l1miss", frame, thread, Math.Round(multiplier * cn.L1Misses));
+                    output.Add("l2miss", frame, thread, Math.Round(multiplier * cn.L2Misses));
+                    output.Add("l3miss", frame, thread, Math.Round(multiplier * cn.L3Misses));
 
-                    //output.Add("ipc", frame, thread, hw.IPC);
+                    output.Add("l2perf", frame, thread, cn.L2Clock);
+                    output.Add("l3perf", frame, thread, cn.L3Clock);
+
+                    output.Add("dzf", frame, thread, dzf);
+                    output.Add("hpf", frame, thread, hpf);
+                    output.Add("ipc", frame, thread, cn.IPC);
 
                 }
      
