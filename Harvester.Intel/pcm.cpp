@@ -341,28 +341,17 @@ void print_test(PCM * m,
 	const std::vector<SocketCounterState> & sktstate2,
 	const SystemCounterState& sstate1,
 	const SystemCounterState& sstate2,
-	const int cpu_model,
-	const bool show_core_output,
-	const bool show_socket_output,
-	const bool show_system_output
+	const int cpu_model
 	)
 {
-	/*if (show_system_output)
+	for (uint32 i = 0; i < 1/* m->getNumCores()*/; ++i)
 	{
-		cout <<  "\n" << getL2CacheMisses(sstate1, sstate2);
-	}*/
-
-
-	if (show_core_output)
-	{
-		for (uint32 i = 0; i < 1/* m->getNumCores()*/; ++i)
-		{
-			cout << "\n" << (getEvent0(cstates1[i], cstates2[i]) / 1000) << "K" <<
-				"\t" << (getEvent1(cstates1[i], cstates2[i]) / 1000) << "K" <<
-				"\t" << (getEvent2(cstates1[i], cstates2[i]) / 1000) << "K" <<
-				"\t" << (getEvent3(cstates1[i], cstates2[i]) / 1000) << "K" ;
-		}
+		cout << "\n" << (getEvent0(cstates1[i], cstates2[i])) <<
+			"\t" << (getEvent1(cstates1[i], cstates2[i]))  <<
+			"\t" << (getEvent2(cstates1[i], cstates2[i]))  <<
+			"\t" << (getEvent3(cstates1[i], cstates2[i]))  ;
 	}
+	
 }
 
 
@@ -537,22 +526,16 @@ int main(int argc, char * argv[])
 	uint64 TimeBeforeSleep = 0;
 	uint64 TimeAfterSleep = 0;
 
-	//m->getAllCounterStates(sstate1, sktstate1, cstates1);
-
-	//if (csv_output)
-	//	print_csv_header(m, cpu_model, show_core_output, show_socket_output, show_system_output);
-
 	// TLB
-	auto descr = new PCM::CustomCoreEventDescription[4];
+	PCM::CustomCoreEventDescription descr[4];
 	descr[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
 	descr[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
-	descr[1].event_number = MEM_LOAD_RETIRED_DTLB_MISS_EVTNR;
-	descr[1].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
-	descr[2].event_number = DTLB_MISSES_ANY_EVTNR;
-	descr[2].umask_value = DTLB_MISSES_ANY_UMASK;
+	descr[1].event_number = DTLB_MISSES_ANY_EVTNR;
+	descr[1].umask_value = DTLB_MISSES_ANY_UMASK;
+	descr[2].event_number = MEM_LOAD_RETIRED_DTLB_MISS_EVTNR;
+	descr[2].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
 	descr[3].event_number = DTLB_LOAD_MISSES_EVTNR;
 	descr[3].umask_value = DTLB_LOAD_MISSES_UMASK;
-
 	
 
 	bool tlbMode = false;
@@ -571,12 +554,12 @@ int main(int argc, char * argv[])
 
 		// Whether we should collect tlb or default
 		PCM::ErrorCode status = tlbMode
-			? m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, descr)
+			? m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, &descr)
 			: m->program();
 
 		// Get the counters (t0)
-		TimeBeforeSleep = m->getTickCountRDTSCP(1000000);
 		m->getAllCounterStates(sstate1, sktstate1, cstates1);
+		TimeBeforeSleep = m->getTickCountRDTSCP(1000000);
 
 		// Sleep (ms.)
 		if (sysCmd) MySystem(sysCmd);
@@ -590,7 +573,8 @@ int main(int argc, char * argv[])
 		auto duration = (TimeAfterSleep - TimeBeforeSleep);
 
 		print_harvester(m, tlbMode, duration, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2, cpu_model);
-		//print_test(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2, cpu_model, show_core_output, show_socket_output, show_system_output);
+		//if (tlbMode)
+		//	print_test(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2, cpu_model);
 
 		// Cleanup the PMU
 		m->cleanup();
