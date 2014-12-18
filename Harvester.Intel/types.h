@@ -80,6 +80,17 @@ typedef signed int int32;
 #define MEM_LOAD_RETIRED_L2_HIT_EVTNR   (0xCB)
 #define MEM_LOAD_RETIRED_L2_HIT_UMASK   (0x02)
 
+// DTLB Misses
+
+#define MEM_LOAD_RETIRED_DTLB_MISS_EVTNR   (0xCB)
+#define MEM_LOAD_RETIRED_DTLB_MISS_UMASK   (0x80)
+
+#define DTLB_MISSES_ANY_EVTNR   (0x49)
+#define DTLB_MISSES_ANY_UMASK   (0x1)
+
+#define DTLB_LOAD_MISSES_EVTNR   (0x8)
+#define DTLB_LOAD_MISSES_UMASK   (0x1)
+
 // Sandy Bridge on-core events
 
 #define MEM_LOAD_UOPS_MISC_RETIRED_LLC_MISS_EVTNR (0xD4)

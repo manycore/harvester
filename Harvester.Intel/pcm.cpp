@@ -288,27 +288,28 @@ void print_simple(PCM * m,
 	const bool show_system_output
 	)
 {
+	//assert(getNumberOfCustomEvents(0, sstate1, sstate2) == getL3CacheMisses(sstate1, sstate2));
+	//assert(getNumberOfCustomEvents(1, sstate1, sstate2) == getL3CacheHitsNoSnoop(sstate1, sstate2));
+	//assert(getNumberOfCustomEvents(2, sstate1, sstate2) == getL3CacheHitsSnoop(sstate1, sstate2));
+	//assert(getNumberOfCustomEvents(3, sstate1, sstate2) == getL2CacheHits(sstate1, sstate2));
 
-
-	if (show_system_output)
+	/*if (show_system_output)
 	{
 		cout <<  "\n" << getL2CacheMisses(sstate1, sstate2);
-	}
+	}*/
 
 
-	/*if (show_core_output)
+	if (show_core_output)
 	{
-		for (uint32 i = 0; i < m->getNumCores(); ++i)
+		for (uint32 i = 0; i < 1/* m->getNumCores()*/; ++i)
 		{
-			if (cpu_model != PCM::ATOM)
-				cout << getL3CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
-				';';
+			cout << "\n" << getEvent0(cstates1[i], cstates2[i]) <<
+				"\t" << getEvent1(cstates1[i], cstates2[i]) <<
+				"\t" << getEvent2(cstates1[i], cstates2[i]) <<
+				"\t" << getEvent3(cstates1[i], cstates2[i]) ;
 
 		}
-	}*/
+	}
 
 }
 
@@ -491,8 +492,10 @@ int main(int argc, char * argv[])
 
 	m->getAllCounterStates(sstate1, sktstate1, cstates1);
 
-	if (csv_output)
-		print_csv_header(m, cpu_model, show_core_output, show_socket_output, show_system_output);
+	//if (csv_output)
+	//	print_csv_header(m, cpu_model, show_core_output, show_socket_output, show_system_output);
+
+	bool altMode = true;
 
 	while (1)
 	{
@@ -500,12 +503,6 @@ int main(int argc, char * argv[])
 
 		// We set the delay in milliseconds already
 		int delay_ms = delay;
-
-#ifdef _MSC_VER
-		// Compensate slow Windows console output (DISABLED)
-		// if (TimeAfterSleep) delay_ms -= (uint32)(m->getTickCount() - TimeAfterSleep);
-		// if (delay_ms < 0) delay_ms = 0;
-#endif
 
 		if (sysCmd)
 		{
@@ -518,29 +515,30 @@ int main(int argc, char * argv[])
 
 		TimeAfterSleep = m->getTickCount();
 
+		// Get the counter states
 		m->getAllCounterStates(sstate2, sktstate2, cstates2);
 
-		print_csv(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2,
+		print_simple(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2,
 			cpu_model, show_core_output, show_socket_output, show_system_output);
 
-
-		// sanity checks
-		if (cpu_model == PCM::ATOM)
-		{
-			assert(getNumberOfCustomEvents(0, sstate1, sstate2) == getL2CacheMisses(sstate1, sstate2));
-			assert(getNumberOfCustomEvents(1, sstate1, sstate2) == getL2CacheMisses(sstate1, sstate2) + getL2CacheHits(sstate1, sstate2));
-		}
-		else
-		{
-			assert(getNumberOfCustomEvents(0, sstate1, sstate2) == getL3CacheMisses(sstate1, sstate2));
-			assert(getNumberOfCustomEvents(1, sstate1, sstate2) == getL3CacheHitsNoSnoop(sstate1, sstate2));
-			assert(getNumberOfCustomEvents(2, sstate1, sstate2) == getL3CacheHitsSnoop(sstate1, sstate2));
-			assert(getNumberOfCustomEvents(3, sstate1, sstate2) == getL2CacheHits(sstate1, sstate2));
-		}
-
+		// Swap the counter states for further sampling
 		std::swap(sstate1, sstate2);
 		std::swap(sktstate1, sktstate2);
 		std::swap(cstates1, cstates2);
+
+		// This shoud reprogram the PMU states so we can sample something else tne next iteration
+		sktstate2.clear();
+		cstates2.clear();
+		sktstate1.clear();
+		cstates1.clear();
+		
+		// Cleanup the PMU and reprogram it depending on the mode
+		m->cleanup();
+		PCM::ErrorCode status = m->program(altMode ? PCM::ProgramMode::TLB_MISS_EVENTS : PCM::ProgramMode::DEFAULT_EVENTS);
+		m->getAllCounterStates(sstate1, sktstate1, cstates1);
+
+		altMode = altMode ? false : true;
+		cout << "\n" << status;
 
 		if (sysCmd)
 		{

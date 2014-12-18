@@ -229,6 +229,7 @@ public:
         DEFAULT_EVENTS = 0,         /*!< Default choice of events, the additional parameter is not needed and ignored */
         CUSTOM_CORE_EVENTS = 1,     /*!< Custom set of core events specified in the parameter to the program method. The parameter must be a pointer to array of four \c CustomCoreEventDescription values */
         EXT_CUSTOM_CORE_EVENTS = 2, /*!< Custom set of core events specified in the parameter to the program method. The parameter must be a pointer to a \c ExtendedCustomCoreEventDescription  data structure */
+		TLB_MISS_EVENTS = 3,        /*!< Custom set of core events for TLB misses.*/
         INVALID_MODE                /*!< Non-programmed mode */
     };
 
@@ -743,6 +744,16 @@ class BasicCounterState
     friend double getCoreC6Residency(const CounterStateType & before, const CounterStateType & after);
     template <class CounterStateType>
     friend double getCoreC7Residency(const CounterStateType & before, const CounterStateType & after);
+
+	template <class CounterStateType>
+	friend uint64 getEvent0(const CounterStateType & before, const CounterStateType & after);
+	template <class CounterStateType>
+	friend uint64 getEvent1(const CounterStateType & before, const CounterStateType & after);
+	template <class CounterStateType>
+	friend uint64 getEvent2(const CounterStateType & before, const CounterStateType & after);
+	template <class CounterStateType>
+	friend uint64 getEvent3(const CounterStateType & before, const CounterStateType & after);
+
 protected:
     uint64 InstRetiredAny;
     uint64 CpuClkUnhaltedThread;
@@ -785,6 +796,10 @@ public:
     , C6Residency(0)
     , C7Residency(0)
     , ThermalHeadroom(PCM_INVALID_THERMAL_HEADROOM)
+	, Event0(0)
+	, Event1(0)
+	, Event2(0)
+	, Event3(0)
     { }
     virtual ~BasicCounterState() { }
 
@@ -1432,6 +1447,42 @@ double getL2CacheHitRatio(const CounterStateType & before, const CounterStateTyp
     return 1;
 }
 
+
+
+
+/*! \brief Gets the custom Event0 */
+template <class CounterStateType>
+uint64 getEvent0(const CounterStateType & before, const CounterStateType & after)
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return 0;
+	//return ((&after.Event0)[eventCounterNr] - (&before.Event0)[eventCounterNr]);
+	return after.Event0 - before.Event0;
+}
+
+/*! \brief Gets the custom Event1 */
+template <class CounterStateType>
+uint64 getEvent1(const CounterStateType & before, const CounterStateType & after)
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return 0;
+	return after.Event1 - before.Event1;
+}
+
+/*! \brief Gets the custom Event2 */
+template <class CounterStateType>
+uint64 getEvent2(const CounterStateType & before, const CounterStateType & after)
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return 0;
+	return after.Event2 - before.Event2;
+}
+
+/*! \brief Gets the custom Event3 */
+template <class CounterStateType>
+uint64 getEvent3(const CounterStateType & before, const CounterStateType & after)
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return 0;
+	return after.Event3 - before.Event3;
+}
+
 /*! \brief Computes L3 cache hit ratio
 
     \param before CPU counter state before the experiment
@@ -1946,5 +1997,6 @@ inline uint64 getNumberOfEvents(PCIeCounterState before, PCIeCounterState after)
 {
     return after.data - before.data;
 }
+
 
 #endif
