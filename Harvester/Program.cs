@@ -32,7 +32,7 @@ namespace Harvester
             var pcm = HarvestProcess.FromBinary("pcm-win", "pcm.exe", Resources.pcm_win);
             var os = HarvestProcess.FromBinary("os-win", "PerfMonitor.exe", Resources.os_win);
 
-            pcm.Run("2");
+            pcm.Run("1");
             os.Run(" -KernelEvents:ContextSwitch,MemoryPageFaults  start");
 
             Console.WriteLine("Press any key to stop data collection...");

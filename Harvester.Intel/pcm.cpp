@@ -275,7 +275,66 @@ void print_csv(PCM * m,
 }
 
 
-void print_simple(PCM * m,
+void print_harvester(PCM * m, bool tlbMode, uint64 duration,
+	const std::vector<CoreCounterState> & cstates1,
+	const std::vector<CoreCounterState> & cstates2,
+	const std::vector<SocketCounterState> & sktstate1,
+	const std::vector<SocketCounterState> & sktstate2,
+	const SystemCounterState& sstate1,
+	const SystemCounterState& sstate2,
+	const int cpu_model
+	)
+{
+	time_t t = time(NULL);
+	tm *tt = localtime(&t);
+	cout.precision(3);
+
+	long ctime = clock();
+	if (prevs != tt->tm_sec){
+		milli = 0;
+		if (prevs != -1)
+			start = true;
+	}
+	else{
+		milli += ctime - prevc;
+	}
+	prevs = tt->tm_sec;
+	prevc = ctime;
+
+	if (!start)
+		return;
+
+	cout << "\n" << tt->tm_hour << ':' << tt->tm_min << ':' << tt->tm_sec << ':' << milli << ';' << duration << ";";
+	cout << (tlbMode ? "TLB" : "CACHE") << ";";
+
+	// For each core we have
+	for (uint32 i = 0; i < m->getNumCores(); ++i)
+	{
+		if (tlbMode)
+		{
+			// Get our TLB misses
+			cout << getEvent1(cstates1[i], cstates2[i]) <<
+				';';
+		}
+		else
+		{
+			// Default events we need to get per core
+			cout << getIPC(cstates1[i], cstates2[i]) <<
+				';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
+				';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';';
+		}
+	}
+	
+
+}
+
+
+void print_test(PCM * m,
 	const std::vector<CoreCounterState> & cstates1,
 	const std::vector<CoreCounterState> & cstates2,
 	const std::vector<SocketCounterState> & sktstate1,
@@ -288,11 +347,6 @@ void print_simple(PCM * m,
 	const bool show_system_output
 	)
 {
-	//assert(getNumberOfCustomEvents(0, sstate1, sstate2) == getL3CacheMisses(sstate1, sstate2));
-	//assert(getNumberOfCustomEvents(1, sstate1, sstate2) == getL3CacheHitsNoSnoop(sstate1, sstate2));
-	//assert(getNumberOfCustomEvents(2, sstate1, sstate2) == getL3CacheHitsSnoop(sstate1, sstate2));
-	//assert(getNumberOfCustomEvents(3, sstate1, sstate2) == getL2CacheHits(sstate1, sstate2));
-
 	/*if (show_system_output)
 	{
 		cout <<  "\n" << getL2CacheMisses(sstate1, sstate2);
@@ -303,15 +357,15 @@ void print_simple(PCM * m,
 	{
 		for (uint32 i = 0; i < 1/* m->getNumCores()*/; ++i)
 		{
-			cout << "\n" << getEvent0(cstates1[i], cstates2[i]) <<
-				"\t" << getEvent1(cstates1[i], cstates2[i]) <<
-				"\t" << getEvent2(cstates1[i], cstates2[i]) <<
-				"\t" << getEvent3(cstates1[i], cstates2[i]) ;
-
+			cout << "\n" << (getEvent0(cstates1[i], cstates2[i]) / 1000) << "K" <<
+				"\t" << (getEvent1(cstates1[i], cstates2[i]) / 1000) << "K" <<
+				"\t" << (getEvent2(cstates1[i], cstates2[i]) / 1000) << "K" <<
+				"\t" << (getEvent3(cstates1[i], cstates2[i]) / 1000) << "K" ;
 		}
 	}
-
 }
+
+
 
 int main(int argc, char * argv[])
 {
@@ -321,11 +375,6 @@ int main(int argc, char * argv[])
 	std::cerr.rdbuf(&nullStream2);
 #endif
 
-	cout << endl;
-	cout << " Intel(r) Performance Counter Monitor " << INTEL_PCM_VERSION << endl;
-	cout << endl;
-	cout << " Copyright (c) 2009-2012 Intel Corporation" << endl;
-	cout << endl;
 #ifdef _MSC_VER
 	// Increase the priority a bit to improve context switching delays on Windows
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -353,7 +402,6 @@ int main(int argc, char * argv[])
 
 
 	if (argc >= 2)
-
 	{
 		if (strcmp(argv[1], "--help") == 0 ||
 			strcmp(argv[1], "-h") == 0 ||
@@ -458,8 +506,7 @@ int main(int argc, char * argv[])
 
 	PCM * m = PCM::getInstance();
 	if (disable_JKT_workaround) m->disableJKTWorkaround();
-	PCM::ErrorCode status = m->program();
-	switch (status)
+	/*switch (status)
 	{
 	case PCM::Success:
 		break;
@@ -480,66 +527,76 @@ int main(int argc, char * argv[])
 	default:
 		cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << endl;
 		return -1;
-	}
+	}*/
 
 	cout << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << endl;
 
-	std::vector<CoreCounterState> cstates1, cstates2;
-	std::vector<SocketCounterState> sktstate1, sktstate2;
-	SystemCounterState sstate1, sstate2;
+
 	const int cpu_model = m->getCPUModel();
+
+	uint64 TimeBeforeSleep = 0;
 	uint64 TimeAfterSleep = 0;
 
-	m->getAllCounterStates(sstate1, sktstate1, cstates1);
+	//m->getAllCounterStates(sstate1, sktstate1, cstates1);
 
 	//if (csv_output)
 	//	print_csv_header(m, cpu_model, show_core_output, show_socket_output, show_system_output);
 
-	bool altMode = true;
+	// TLB
+	auto descr = new PCM::CustomCoreEventDescription[4];
+	descr[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
+	descr[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
+	descr[1].event_number = MEM_LOAD_RETIRED_DTLB_MISS_EVTNR;
+	descr[1].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
+	descr[2].event_number = DTLB_MISSES_ANY_EVTNR;
+	descr[2].umask_value = DTLB_MISSES_ANY_UMASK;
+	descr[3].event_number = DTLB_LOAD_MISSES_EVTNR;
+	descr[3].umask_value = DTLB_LOAD_MISSES_UMASK;
 
+	
+
+	bool tlbMode = false;
+	cout << "\n";
+
+	freopen("output.csv", "w", stdout);
+	cout << "BEGIN";
 	while (1)
 	{
-		cout << std::flush;
+	
 
-		// We set the delay in milliseconds already
-		int delay_ms = delay;
+		// Fresh containers
+		std::vector<CoreCounterState> cstates1, cstates2;
+		std::vector<SocketCounterState> sktstate1, sktstate2;
+		SystemCounterState sstate1, sstate2;
 
-		if (sysCmd)
-		{
-			MySystem(sysCmd);
-		}
-		else
-		{
-			MySleepMs(delay_ms);
-		}
+		// Whether we should collect tlb or default
+		PCM::ErrorCode status = tlbMode
+			? m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, descr)
+			: m->program();
 
-		TimeAfterSleep = m->getTickCount();
-
-		// Get the counter states
-		m->getAllCounterStates(sstate2, sktstate2, cstates2);
-
-		print_simple(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2,
-			cpu_model, show_core_output, show_socket_output, show_system_output);
-
-		// Swap the counter states for further sampling
-		std::swap(sstate1, sstate2);
-		std::swap(sktstate1, sktstate2);
-		std::swap(cstates1, cstates2);
-
-		// This shoud reprogram the PMU states so we can sample something else tne next iteration
-		sktstate2.clear();
-		cstates2.clear();
-		sktstate1.clear();
-		cstates1.clear();
-		
-		// Cleanup the PMU and reprogram it depending on the mode
-		m->cleanup();
-		PCM::ErrorCode status = m->program(altMode ? PCM::ProgramMode::TLB_MISS_EVENTS : PCM::ProgramMode::DEFAULT_EVENTS);
+		// Get the counters (t0)
+		TimeBeforeSleep = m->getTickCountRDTSCP(1000000);
 		m->getAllCounterStates(sstate1, sktstate1, cstates1);
 
-		altMode = altMode ? false : true;
-		cout << "\n" << status;
+		// Sleep (ms.)
+		if (sysCmd) MySystem(sysCmd);
+		else MySleepMs(delay);
 
+		// Get the counter states (t1)
+		m->getAllCounterStates(sstate2, sktstate2, cstates2);
+
+		// Get the duration of our sampling
+		TimeAfterSleep = m->getTickCountRDTSCP(1000000);
+		auto duration = (TimeAfterSleep - TimeBeforeSleep);
+
+		print_harvester(m, tlbMode, duration, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2, cpu_model);
+		//print_test(m, cstates1, cstates2, sktstate1, sktstate2, sstate1, sstate2, cpu_model, show_core_output, show_socket_output, show_system_output);
+
+		// Cleanup the PMU
+		m->cleanup();
+
+		// Switch the mode (round-roblin)
+		tlbMode = tlbMode ? false : true;
 		if (sysCmd)
 		{
 			// system() call removes PCM cleanup handler. need to do clean up explicitely
@@ -547,6 +604,8 @@ int main(int argc, char * argv[])
 			break;
 		}
 	}
+
+	cout << std::flush;
 
 	return 0;
 }

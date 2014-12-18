@@ -51,6 +51,10 @@ namespace Harvester.Analysis
         /// </summary>
         public double L2Clock;
 
+        /// <summary>
+        /// Gets or sets the number of TLB misses.
+        /// </summary>
+        public double TLBMisses;
     }
 
 

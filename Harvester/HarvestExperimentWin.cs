@@ -39,7 +39,7 @@ namespace Harvester
 
             // Move the files
             if(!File.Exists(pcmCsv))
-                File.Move(pcm.Stdout.FullName, pcmCsv);
+                File.Copy(pcm.Output.FullName, pcmCsv);
             if (!File.Exists(etlZip))
             {
                 File.Move(Path.Combine(os.Executable.Directory.FullName, "PerfMonitorOutput.etl.zip"), etlZip);
@@ -51,6 +51,7 @@ namespace Harvester
                 }
                 catch { }
             }
+
 
             // Load the etl and transform
             if (!File.Exists(etlxFile))
@@ -92,7 +93,7 @@ namespace Harvester
             var experiment = new SimpleProcessor(traceLog, counters);
 
             // Analyze
-            var output =  experiment.Analyze(processName, 10);
+            var output =  experiment.Analyze(processName, 100);
 
             // Write the output
             output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));

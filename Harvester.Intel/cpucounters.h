@@ -229,7 +229,6 @@ public:
         DEFAULT_EVENTS = 0,         /*!< Default choice of events, the additional parameter is not needed and ignored */
         CUSTOM_CORE_EVENTS = 1,     /*!< Custom set of core events specified in the parameter to the program method. The parameter must be a pointer to array of four \c CustomCoreEventDescription values */
         EXT_CUSTOM_CORE_EVENTS = 2, /*!< Custom set of core events specified in the parameter to the program method. The parameter must be a pointer to a \c ExtendedCustomCoreEventDescription  data structure */
-		TLB_MISS_EVENTS = 3,        /*!< Custom set of core events for TLB misses.*/
         INVALID_MODE                /*!< Non-programmed mode */
     };
 

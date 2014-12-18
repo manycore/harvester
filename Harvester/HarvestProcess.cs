@@ -54,6 +54,14 @@ namespace Harvester
         /// </summary>
         public FileInfo Stdout
         {
+            get { return new FileInfo(Path.Combine(this.Executable.Directory.FullName, "stdout.txt")); }
+        }
+
+        /// <summary>
+        /// Gets the file path of the process.
+        /// </summary>
+        public FileInfo Output
+        {
             get { return new FileInfo(Path.Combine(this.Executable.Directory.FullName, "output.csv")); }
         }
 

@@ -8,124 +8,119 @@ namespace Diagnostics.Tracing
 {
     public class TraceCounter
     {
-        /// <summary>
-        /// Constructs a parsed entry.
-        /// </summary>
-        private TraceCounter(string[] line, int year, int month, int day, DateTime previousTime)
+        public TraceCounter(int core, DateTime time, double duration, TraceCounterType type, double value)
         {
-            // The lenght of system-wide entry
-            int systemLength = 20;
-
-            // The lenght of the core entry
-            int coreLength = 10;
-
-            // Calculate the number of cores we have in the file
-            int cores = (line.Length - systemLength) / coreLength;
-            this.Core = new TraceCounterCore[cores];
-
-            // Parse system-wide
-            // TIME	EXEC	IPC	FREQ	AFREQ	L3MISS	L2MISS	L3HIT	L2HIT	L3CLK	L2CLK	READ	WRITE	INST	ACYC	TICKS	IPC	INST	MAXIPC
-
-            this.TIME = ParseTime(line[0], year, month, day);
-
-            this.EXEC = Double.Parse(line[1], CultureInfo.InvariantCulture);
-            this.IPC = Double.Parse(line[2], CultureInfo.InvariantCulture);
-            this.FREQ = Double.Parse(line[3], CultureInfo.InvariantCulture);
-            this.AFREQ = Double.Parse(line[4], CultureInfo.InvariantCulture);
-            this.L3MISS = Int64.Parse(line[5], CultureInfo.InvariantCulture);
-            this.L2MISS = Int64.Parse(line[6], CultureInfo.InvariantCulture);
-            this.L3HIT = Int64.Parse(line[7], CultureInfo.InvariantCulture);
-            this.L2HIT = Int64.Parse(line[8], CultureInfo.InvariantCulture);
-            this.L3CLK = Double.Parse(line[9], CultureInfo.InvariantCulture);
-            this.L2CLK = Double.Parse(line[10], CultureInfo.InvariantCulture);
-            this.READ = Double.Parse(line[11], CultureInfo.InvariantCulture);
-            this.WRITE = Double.Parse(line[12], CultureInfo.InvariantCulture);
-            this.INST = Int64.Parse(line[13], CultureInfo.InvariantCulture);
-            this.ACYC = Int64.Parse(line[14], CultureInfo.InvariantCulture);
-            this.TICKS = Int64.Parse(line[15], CultureInfo.InvariantCulture);
-            this.IPC2 = Double.Parse(line[16], CultureInfo.InvariantCulture);
-            this.RINST = Double.Parse(line[17], CultureInfo.InvariantCulture);
-            this.MAXIPC = Int64.Parse(line[18], CultureInfo.InvariantCulture);
-
-
-            for (int i = 0; i < cores; ++i)
-            {
-                int offset = systemLength + (i * coreLength);
-                this.Core[i] = new TraceCounterCore();
-                this.Core[i].IPC = Double.Parse(line[offset], CultureInfo.InvariantCulture);
-                this.Core[i].FREQ = Double.Parse(line[offset + 1], CultureInfo.InvariantCulture);
-                this.Core[i].AFREQ = Double.Parse(line[offset + 2], CultureInfo.InvariantCulture);
-                this.Core[i].L3MISS = Int64.Parse(line[offset + 3], CultureInfo.InvariantCulture);
-                this.Core[i].L2MISS = Int64.Parse(line[offset + 4], CultureInfo.InvariantCulture);
-                this.Core[i].L3HIT = Int64.Parse(line[offset + 5], CultureInfo.InvariantCulture);
-                this.Core[i].L2HIT = Int64.Parse(line[offset + 6], CultureInfo.InvariantCulture);
-                this.Core[i].L3CLK = Double.Parse(line[offset + 7], CultureInfo.InvariantCulture);
-                this.Core[i].L2CLK = Double.Parse(line[offset + 8], CultureInfo.InvariantCulture);
-            }
-
-            // Calculate the duration
-            this.Duration = previousTime != DateTime.MinValue
-                ? (this.TIME - previousTime).TotalMilliseconds
-                : 2d;
+            this.Core = core;
+            this.Time = time;
+            this.Duration = duration;
+            this.Type = type;
+            this.Value = value;
         }
 
-        public readonly DateTime TIME;
-        public readonly double EXEC;
-        public readonly double IPC;
-        public readonly double FREQ;
-        public readonly double AFREQ;
-        public readonly long L3MISS;
-        public readonly long L2MISS;
-        public readonly long L3HIT;
-        public readonly long L2HIT;
-        public readonly double L3CLK;
-        public readonly double L2CLK;
-        public readonly double READ;
-        public readonly double WRITE;
-        public readonly long INST;
-        public readonly long ACYC;
-        public readonly long TICKS;
-        public readonly double IPC2;
-        public readonly double RINST;
-        public readonly long MAXIPC;
+        /// <summary>
+        /// The core number for this event counter
+        /// </summary>
+        public int Core;
+
+        /// <summary>
+        /// The time of this event counter
+        /// </summary>
+        public DateTime Time;
+
+        /// <summary>
+        /// The type of the counter
+        /// </summary>
+        public TraceCounterType Type;
+
+        /// <summary>
+        /// The value of the counter
+        /// </summary>
+        public double Value;
 
         /// <summary>
         /// The duration over which the counters were calculated, in milliseconds
         /// </summary>
         public double Duration;
 
-        /// <summary>
-        /// The specific counters for each core.
-        /// </summary>
-        public readonly TraceCounterCore[] Core;
+        public override string ToString()
+        {
+            return string.Format("{0}: {1}", Type, Value);
+        }
 
         /// <summary>
         /// Read the hardware counters from file.
         /// </summary>
         public static IEnumerable<TraceCounter> FromFile(string path, int year, int month, int day)
         {
-            var foundBeginning = false;
-            var previousTime = DateTime.MinValue;
             using (var reader = new StreamReader(path, Encoding.UTF8))
             {
-                string line; 
-                var idx = 0;
-                while ((line = reader.ReadLine()) != null)
+                string text; 
+                while ((text = reader.ReadLine()) != null)
                 {
-                    ++idx;
-                    if (!foundBeginning)
-                    {
-                        // Make sure we found a beginning
-                        foundBeginning = line.StartsWith("TIME");
+                    // Parse one line
+                    if (text.StartsWith("BEGIN"))
                         continue;
+                    var line = text.Split(';');
+                    if (line.Length < 3)
+                        continue;
+
+                    // Get the time and the duration
+                    var time = ParseTime(line[0], year, month, day);
+                    var duration = Double.Parse(line[1], CultureInfo.InvariantCulture);
+
+                    // We should start reading at this offset
+                    var offset = 3;
+
+                    // Events that represent cache
+                    if (line[2] == "CACHE")
+                    {
+                        // The lenght of the core entry
+                        var recordLength = 7;
+                        var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength);
+                        for (int core = 0; core < coreCount; ++core)
+                        {
+                            var i = offset + (core * recordLength);
+
+                            // Get the values for the cache
+                            var ipc     = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
+                            var l3miss  = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
+                            var l2miss  = Double.Parse(line[i + 2], CultureInfo.InvariantCulture);
+                            var l3hit   = Double.Parse(line[i + 3], CultureInfo.InvariantCulture);
+                            var l2hit   = Double.Parse(line[i + 4], CultureInfo.InvariantCulture);
+                            var l3clock = Double.Parse(line[i + 5], CultureInfo.InvariantCulture);
+                            var l2clock = Double.Parse(line[i + 6], CultureInfo.InvariantCulture);
+
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.IPC, ipc);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L3Miss, l3miss);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L2Miss, l2miss);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L3Hit, l3hit);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L2Hit, l2hit);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L3Clock, l3clock);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L2Clock, l2clock);
+                        }
+
                     }
 
-                    // Parse one line
-                    var csv = line.Split(';');
-                    yield return new TraceCounter(csv, year, month, day, previousTime);
+                    // Events that represent TLB
+                    if (line[2] == "TLB")
+                    {
+                        // The lenght of the core entry
+                        var recordLength = 1;
+                        var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength) - 1; // for some reason there's an empty one
+                        for (int core = 0; core < coreCount; ++core)
+                        {
+                            var i = offset + (core * recordLength);
 
-                    // Set the previous time
-                    previousTime = ParseTime(csv[0], year, month, day);
+                            // Get the values for the tlb
+                            var tlbMiss = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
+
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.TLBMiss, tlbMiss);
+                        }
+                    }
+
+
+
+                    //yield return new TraceCounter(csv, year, month, day);
                 }
             }
         }
@@ -140,6 +135,20 @@ namespace Diagnostics.Tracing
                 int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]), int.Parse(time[3]));
         }
 
+
     }
+
+    public enum TraceCounterType
+    {
+        IPC,
+        L2Miss,
+        L3Miss,
+        L2Hit,
+        L3Hit,
+        L2Clock,
+        L3Clock,
+        TLBMiss
+    }
+
 }
 

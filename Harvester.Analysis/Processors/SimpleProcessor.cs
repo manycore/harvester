@@ -62,6 +62,7 @@ namespace Harvester.Analysis
                     output.Add("l1miss", frame, thread, Math.Round(multiplier * cn.L1Misses));
                     output.Add("l2miss", frame, thread, Math.Round(multiplier * cn.L2Misses));
                     output.Add("l3miss", frame, thread, Math.Round(multiplier * cn.L3Misses));
+                    output.Add("tlbmiss", frame, thread, Math.Round(multiplier * cn.TLBMisses));
 
                     output.Add("l2perf", frame, thread, cn.L2Clock);
                     output.Add("l3perf", frame, thread, cn.L3Clock);

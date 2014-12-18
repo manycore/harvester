@@ -1117,6 +1117,7 @@ numInst<=1 && canUsePerf==true -> we are first, perf will be used, *dont check*,
     }
 
     mode = mode_;
+
     
     // copy custom event descriptions
     if (mode == CUSTOM_CORE_EVENTS)
@@ -1138,27 +1139,6 @@ numInst<=1 && canUsePerf==true -> we are first, perf will be used, *dont check*,
         else
             core_gen_counter_num_used = 2;
     }
-	if (mode == TLB_MISS_EVENTS)
-	{
-		if (
-			NEHALEM_EP == cpu_model
-			|| WESTMERE_EP == cpu_model
-			|| CLARKDALE == cpu_model
-			)
-		{
-			coreEventDesc[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
-			coreEventDesc[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
-			coreEventDesc[1].event_number = MEM_LOAD_RETIRED_DTLB_MISS_EVTNR;
-			coreEventDesc[1].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
-			coreEventDesc[2].event_number = DTLB_MISSES_ANY_EVTNR;
-			coreEventDesc[2].umask_value = DTLB_MISSES_ANY_UMASK;
-			coreEventDesc[3].event_number = DTLB_LOAD_MISSES_EVTNR;
-			coreEventDesc[3].umask_value = DTLB_LOAD_MISSES_UMASK;
-			core_gen_counter_num_used = 4;
-			mode = CUSTOM_CORE_EVENTS;
-		}
-
-	}
     else
     {
         if (cpu_model == ATOM)
@@ -1904,7 +1884,7 @@ bool PCM::decrementInstanceSemaphore()
     else
     {
         // unknown error
-        std::cout << "ERROR: Bad semaphore. Performed cleanup twice?" << std::endl;
+        //std::cout << "ERROR: Bad semaphore. Performed cleanup twice?" << std::endl;
     }
         
 

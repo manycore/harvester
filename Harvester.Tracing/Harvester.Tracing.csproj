@@ -53,7 +53,6 @@
     <Compile Include="Manifest.cs" />
     <Compile Include="Microsoft-Scripting-JScript9.cs" />
     <Compile Include="Microsoft-Windows-IE-HTMLRendering.cs" />
-    <Compile Include="PCM\TraceCounterCore.cs" />
     <Compile Include="PCM\TraceCounter.cs" />
     <Compile Include="PEFile.cs" />
     <Compile Include="Stacks\Stacks.cs" />

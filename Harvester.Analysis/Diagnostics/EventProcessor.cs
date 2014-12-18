@@ -42,7 +42,7 @@ namespace Harvester.Analysis
             // Add our data sources
             this.TraceLog = events;
             this.Counters = counters;
-            this.CoreCount = this.Counters[0].Core.Length;
+            this.CoreCount = this.Counters.Max(c => c.Core) + 1;
 
             // A last switch per core
             for (int i = 0; i < this.CoreCount; ++i)
@@ -70,8 +70,8 @@ namespace Harvester.Analysis
                 .ToArray();
 
             // Define the timeframe of the experiment
-            this.Start = new DateTime(Math.Max(this.Process.StartTime.Ticks, this.Counters.First().TIME.Ticks));
-            this.End = new DateTime(Math.Min(this.Process.EndTime.Ticks, this.Counters.Last().TIME.Ticks));
+            this.Start = new DateTime(Math.Max(this.Process.StartTime.Ticks, this.Counters.First().Time.Ticks));
+            this.End = new DateTime(Math.Min(this.Process.EndTime.Ticks, this.Counters.Last().Time.Ticks));
             this.Duration = this.End - this.Start;
             this.Interval = TimeSpan.FromMilliseconds(interval);
             this.Count = (int)Math.Ceiling(this.Duration.TotalMilliseconds / this.Interval.TotalMilliseconds);
@@ -200,16 +200,19 @@ namespace Harvester.Analysis
         /// <returns>The counters for that period.</returns>
         protected virtual EventHwCounters GetCounters(int core, DateTime from, DateTime to)
         {
-            // The total duration of the hw counter samples we have
-            var duration = this.Counters
-                .Where(c => c.TIME >= from && c.TIME <= to)
-                .Select(c => c.Duration)
-                .Sum();
-
+ 
             // Get corresponding hardware counters
             var hardware = this.Counters
-                .Where(c => c.TIME >= from && c.TIME <= to)
-                .Select(c => c.Core[core]);
+                .Where(c => c.Time >= from && c.Time <= to)
+                .Where(c => c.Core == core)
+                .ToArray();
+
+            // The total duration of the hw counter samples we have
+            var duration = hardware
+                .Where(c => c.Type == TraceCounterType.IPC)
+                .Select(c => c.Duration / 1000)
+                .Sum();
+
             var hwcount = hardware.Count();
             
             // If we don't have anything, return zeroes
@@ -221,18 +224,27 @@ namespace Harvester.Analysis
                 return counters;
 
             // Absolute numbers
-            counters.L2Misses = (long)((hardware.Select(c => c.L2MISS).Sum() / duration) * this.Interval.TotalMilliseconds);
-            counters.L3Misses = (long)((hardware.Select(c => c.L3MISS).Sum() / duration) * this.Interval.TotalMilliseconds);
-            counters.L2Hits = (long)((hardware.Select(c => c.L2HIT).Sum() / duration) * this.Interval.TotalMilliseconds);
-            counters.L3Hits = (long)((hardware.Select(c => c.L3HIT).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L2Misses = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Miss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L3Misses = (long)((hardware.Where(c => c.Type == TraceCounterType.L3Miss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L2Hits = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L3Hits = (long)((hardware.Where(c => c.Type == TraceCounterType.L3Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
 
             // Average or sum depending on the counter
-            counters.IPC = hardware.Select(c => c.IPC).Average();
-            counters.L2Clock = hardware.Select(c => c.L2CLK).Average();
-            counters.L3Clock = hardware.Select(c => c.L3CLK).Average();
+            counters.IPC = hardware.Where(c => c.Type == TraceCounterType.IPC).Select(c => c.Value).Average();
+            counters.L2Clock = hardware.Where(c => c.Type == TraceCounterType.L2Clock).Select(c => c.Value).Average();
+            counters.L3Clock = hardware.Where(c => c.Type == TraceCounterType.L3Clock).Select(c => c.Value).Average();
 
             // Computed
             counters.L1Misses = counters.L2Misses + counters.L2Hits;
+
+
+            // The duration of the TLB events
+            duration = hardware
+                .Where(c => c.Type == TraceCounterType.TLBMiss)
+                .Select(c => c.Duration / 1000)
+                .Sum();
+
+            counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
 
             return counters;
         }
