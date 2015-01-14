@@ -15,8 +15,8 @@ namespace Harvester
             //Collect("Matmul");
 
             Analyze("Matmul", "data/Matmul - IJK");
-            //Analyze("Matmul", "data/Matmul - KJI");
-            //Analyze("Matmul", "data/Matmul - KIJ");
+            Analyze("Matmul", "data/Matmul - KJI");
+            Analyze("Matmul", "data/Matmul - KIJ");
 
 
             Console.WriteLine("Done.");

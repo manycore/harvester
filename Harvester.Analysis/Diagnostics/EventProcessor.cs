@@ -224,10 +224,11 @@ namespace Harvester.Analysis
                 return counters;
 
             // Absolute numbers
+            counters.Cycles   = (long)((hardware.Where(c => c.Type == TraceCounterType.Cycles).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.L2Misses = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Miss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.L3Misses = (long)((hardware.Where(c => c.Type == TraceCounterType.L3Miss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
-            counters.L2Hits = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
-            counters.L3Hits = (long)((hardware.Where(c => c.Type == TraceCounterType.L3Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L2Hits   = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L3Hits   = (long)((hardware.Where(c => c.Type == TraceCounterType.L3Hit).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
 
             // Average or sum depending on the counter
             counters.IPC = hardware.Where(c => c.Type == TraceCounterType.IPC).Select(c => c.Value).Average();
@@ -245,6 +246,7 @@ namespace Harvester.Analysis
                 .Sum();
 
             counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.TLBClock = hardware.Where(c => c.Type == TraceCounterType.TLBClock).Select(c => c.Value).Average();
 
             return counters;
         }

@@ -17,6 +17,11 @@ namespace Harvester.Analysis
         public double IPC;
 
         /// <summary>
+        /// Gets or sets the cycles.
+        /// </summary>
+        public long Cycles;
+
+        /// <summary>
         /// Gets or sets the number of L1 cache misses.
         /// </summary>
         public long L1Misses;
@@ -55,6 +60,11 @@ namespace Harvester.Analysis
         /// Gets or sets the number of TLB misses.
         /// </summary>
         public double TLBMisses;
+
+        /// <summary>
+        /// Gets or sets the TLB clock impact.
+        /// </summary>
+        public double TLBClock;
     }
 
 

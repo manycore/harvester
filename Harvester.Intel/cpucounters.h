@@ -704,6 +704,8 @@ class BasicCounterState
     template <class CounterStateType>
     friend double getCyclesLostDueL2CacheMisses(const CounterStateType & before, const CounterStateType & after);
     template <class CounterStateType>
+	friend double getCyclesLostDueTLBMisses(const CounterStateType & before, const CounterStateType & after);
+	template <class CounterStateType>
     friend double getRelativeFrequency(const CounterStateType & before, const CounterStateType & after);
     template <class CounterStateType>
     friend double getActiveRelativeFrequency(const CounterStateType & before, const CounterStateType & after);
@@ -1447,7 +1449,17 @@ double getL2CacheHitRatio(const CounterStateType & before, const CounterStateTyp
 }
 
 
-
+/*! \brief Gets the TLB Performance Impact */
+template <class CounterStateType>
+double getCyclesLostDueTLBMisses(const CounterStateType & before, const CounterStateType & after)
+{
+	int64 clocks = after.CpuClkUnhaltedThread - before.CpuClkUnhaltedThread;
+	if (clocks != 0)
+	{
+		return ((double(after.Event0 - before.Event0) * 30) / double(clocks));
+	}
+	return -1;
+}
 
 /*! \brief Gets the custom Event0 */
 template <class CounterStateType>
@@ -1481,6 +1493,7 @@ uint64 getEvent3(const CounterStateType & before, const CounterStateType & after
 	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return 0;
 	return after.Event3 - before.Event3;
 }
+
 
 /*! \brief Computes L3 cache hit ratio
 

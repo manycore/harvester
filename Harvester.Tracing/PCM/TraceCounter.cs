@@ -75,7 +75,7 @@ namespace Diagnostics.Tracing
                     if (line[2] == "CACHE")
                     {
                         // The lenght of the core entry
-                        var recordLength = 7;
+                        var recordLength = 8;
                         var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength);
                         for (int core = 0; core < coreCount; ++core)
                         {
@@ -83,14 +83,16 @@ namespace Diagnostics.Tracing
 
                             // Get the values for the cache
                             var ipc     = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
-                            var l3miss  = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
-                            var l2miss  = Double.Parse(line[i + 2], CultureInfo.InvariantCulture);
-                            var l3hit   = Double.Parse(line[i + 3], CultureInfo.InvariantCulture);
-                            var l2hit   = Double.Parse(line[i + 4], CultureInfo.InvariantCulture);
-                            var l3clock = Double.Parse(line[i + 5], CultureInfo.InvariantCulture);
-                            var l2clock = Double.Parse(line[i + 6], CultureInfo.InvariantCulture);
+                            var clock   = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
+                            var l3miss  = Double.Parse(line[i + 2], CultureInfo.InvariantCulture);
+                            var l2miss  = Double.Parse(line[i + 3], CultureInfo.InvariantCulture);
+                            var l3hit   = Double.Parse(line[i + 4], CultureInfo.InvariantCulture);
+                            var l2hit   = Double.Parse(line[i + 5], CultureInfo.InvariantCulture);
+                            var l3clock = Double.Parse(line[i + 6], CultureInfo.InvariantCulture);
+                            var l2clock = Double.Parse(line[i + 7], CultureInfo.InvariantCulture);
 
                             yield return new TraceCounter(core, time, duration, TraceCounterType.IPC, ipc);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.Cycles, clock);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L3Miss, l3miss);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L2Miss, l2miss);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L3Hit, l3hit);
@@ -105,15 +107,21 @@ namespace Diagnostics.Tracing
                     if (line[2] == "TLB")
                     {
                         // The lenght of the core entry
-                        var recordLength = 1;
-                        var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength) - 1; // for some reason there's an empty one
+                        var recordLength = 4;
+                        var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength); 
                         for (int core = 0; core < coreCount; ++core)
                         {
                             var i = offset + (core * recordLength);
 
                             // Get the values for the tlb
-                            var tlbMiss = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
+                            var ipc      = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
+                            var clock    = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
+                            var tlbMiss  = Double.Parse(line[i + 2], CultureInfo.InvariantCulture);
+                            var tlbClock = Double.Parse(line[i + 3], CultureInfo.InvariantCulture);
 
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.IPC, ipc);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.Cycles, clock);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.TLBClock, tlbClock);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.TLBMiss, tlbMiss);
                         }
                     }
@@ -141,13 +149,15 @@ namespace Diagnostics.Tracing
     public enum TraceCounterType
     {
         IPC,
+        Cycles,
         L2Miss,
         L3Miss,
         L2Hit,
         L3Hit,
         L2Clock,
         L3Clock,
-        TLBMiss
+        TLBMiss,
+        TLBClock
     }
 
 }

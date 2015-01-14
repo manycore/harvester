@@ -304,8 +304,8 @@ void print_harvester(PCM * m, bool tlbMode, uint64 duration,
 	if (!start)
 		return;
 
-	cout << "\n" << tt->tm_hour << ':' << tt->tm_min << ':' << tt->tm_sec << ':' << milli << ';' << duration << ";";
-	cout << (tlbMode ? "TLB" : "CACHE") << ";";
+	cout << "\n" << tt->tm_hour << ':' << tt->tm_min << ':' << tt->tm_sec << ':' << milli << ';' << duration << ';';
+	cout << (tlbMode ? "TLB" : "CACHE") ;
 
 	// For each core we have
 	for (uint32 i = 0; i < m->getNumCores(); ++i)
@@ -313,20 +313,22 @@ void print_harvester(PCM * m, bool tlbMode, uint64 duration,
 		if (tlbMode)
 		{
 			// Get our TLB misses
-			cout << getEvent1(cstates1[i], cstates2[i]) <<
-				';';
+			cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
+					';' << getCycles(cstates1[i], cstates2[i]) <<
+					';' << getEvent0(cstates1[i], cstates2[i]) <<
+					';' << getCyclesLostDueTLBMisses(cstates1[i], cstates2[i]);
 		}
 		else
 		{
 			// Default events we need to get per core
-			cout << getIPC(cstates1[i], cstates2[i]) <<
-				';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
-				';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) <<
-				';';
+			cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
+					';' << getCycles(cstates1[i], cstates2[i]) <<
+					';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
+					';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
+					';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) ;
 		}
 	}
 	
@@ -346,10 +348,12 @@ void print_test(PCM * m,
 {
 	for (uint32 i = 0; i < 1/* m->getNumCores()*/; ++i)
 	{
-		cout << "\n" << (getEvent0(cstates1[i], cstates2[i])) <<
-			"\t" << (getEvent1(cstates1[i], cstates2[i]))  <<
-			"\t" << (getEvent2(cstates1[i], cstates2[i]))  <<
-			"\t" << (getEvent3(cstates1[i], cstates2[i]))  ;
+		cout << "\n" << (getCyclesLostDueTLBMisses(cstates1[i], cstates2[i])) <<
+			";" << (getCycles(cstates1[i], cstates2[i])) <<
+			";" << (getEvent0(cstates1[i], cstates2[i])) <<
+			";" << (getEvent1(cstates1[i], cstates2[i])) <<
+			";" << (getEvent2(cstates1[i], cstates2[i])) <<
+			";" << (getEvent3(cstates1[i], cstates2[i])) ;
 	}
 	
 }
@@ -528,15 +532,17 @@ int main(int argc, char * argv[])
 
 	// TLB
 	PCM::CustomCoreEventDescription descr[4];
-	descr[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
-	descr[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
+	//descr[0].event_number = DTLB_MISSES_STLB_HIT_EVTNR;
+	//descr[0].umask_value = DTLB_MISSES_STLB_HIT_UMASK;
+	descr[0].event_number = DTLB_LOAD_MISSES_WALK_COMPLETE_EVTNR;
+	descr[0].umask_value = DTLB_LOAD_MISSES_WALK_COMPLETE_UMASK;
 	descr[1].event_number = DTLB_MISSES_ANY_EVTNR;
 	descr[1].umask_value = DTLB_MISSES_ANY_UMASK;
 	descr[2].event_number = MEM_LOAD_RETIRED_DTLB_MISS_EVTNR;
 	descr[2].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
-	descr[3].event_number = DTLB_LOAD_MISSES_EVTNR;
-	descr[3].umask_value = DTLB_LOAD_MISSES_UMASK;
-	
+	descr[3].event_number = MEM_STORE_RETIRED_DTLB_MISS_EVTNR;
+	descr[3].umask_value = MEM_STORE_RETIRED_DTLB_MISS_UMASK;
+
 
 	bool tlbMode = false;
 	cout << "\n";

@@ -66,6 +66,7 @@ namespace Harvester.Analysis
 
                     output.Add("l2perf", frame, thread, cn.L2Clock);
                     output.Add("l3perf", frame, thread, cn.L3Clock);
+                    output.Add("tlbperf", frame, thread, cn.TLBClock);
 
                     output.Add("dzf", frame, thread, dzf);
                     output.Add("hpf", frame, thread, hpf);
