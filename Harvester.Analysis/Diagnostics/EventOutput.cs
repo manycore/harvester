@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -135,6 +136,81 @@ namespace Harvester.Analysis
                         writer.AppendFormat("{0};", timeGroup.Where(t => t.Tid == thread && t.Type == type).Select(e => e.Value).Sum());
                 writer.AppendLine();
             }
+
+            // Write to file.
+            File.WriteAllText(path, writer.ToString());
+        }
+
+        /// <summary>
+        /// Writes the output to a csv file.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="path"></param>
+        public void WriteJson(string name, string path)
+        {
+            var writer = new StringBuilder();
+            var threads = this.Select(e => e.Tid).Distinct().ToArray();
+            var types = this.Select(e => e.Type)
+                .Distinct()
+                .Where(t => t.EndsWith("perf"))
+                .ToArray();
+
+            // The JS object
+            writer.AppendLine("var " + name + " = {");
+            {
+                writer.AppendLine("  name: '" + name + "',");
+                writer.Append("  threads: [");
+                {
+                    for (int ti = 0; ti < threads.Length; ++ti)
+                    {
+                        var tid = threads[ti];
+                        writer.AppendLine("{");
+                        {
+                            writer.AppendLine("      id: '" + tid + "',");
+                            writer.Append("      measures: [");
+                            {
+                                for (int mi = 0; mi < types.Length; ++mi)
+                                {
+                                    var type = types[mi];
+                                    writer.AppendLine("{");
+                                    {
+                                        var data = new List<double>();
+                                        foreach (var timeGroup in this.GroupBy(e => e.Time))
+                                        {
+                                            // Get the values
+                                            var values = timeGroup
+                                                .Where(t => t.Tid == tid && t.Type == type)
+                                                .Select(e => e.Value)
+                                                .ToArray();
+              
+                                            data.Add(Math.Min(values.Length == 0 ? 0 : values.Average(), 1));
+                                        }
+
+                                        writer.AppendLine("        name: '" + type.Replace("perf", String.Empty).ToUpper() + "',");
+                                        writer.AppendLine("        data: [" + 
+                                            data.Select(e => e.ToString(CultureInfo.InvariantCulture))
+                                                .Aggregate((a, b) => a + ", " + b)
+                                            + "]");
+                                    }
+                                    writer.Append("      }");
+                                    if (mi < types.Length - 1)
+                                        writer.Append(",");
+                                }
+                            }
+                            writer.AppendLine("]");
+                        }
+                        writer.Append("    }");
+                        if (ti < threads.Length - 1)
+                        {
+                            writer.AppendLine(",");
+                            writer.Append("    ");
+                        }
+                    }
+                }
+                writer.AppendLine("  ]");
+            }
+            writer.AppendLine("};");
+
 
             // Write to file.
             File.WriteAllText(path, writer.ToString());
