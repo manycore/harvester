@@ -152,11 +152,11 @@ namespace Harvester.Analysis
             var threads = this.Select(e => e.Tid).Distinct().ToArray();
             var types = this.Select(e => e.Type)
                 .Distinct()
-                .Where(t => t.EndsWith("perf"))
+                .Where(t => t.EndsWith("perf") || t.EndsWith("ipc"))
                 .ToArray();
 
             // The JS object
-            writer.AppendLine("var " + name + " = {");
+            writer.AppendLine("var " + name + " = perfdata = {");
             {
                 writer.AppendLine("  name: '" + name + "',");
                 writer.Append("  threads: [");
@@ -183,7 +183,7 @@ namespace Harvester.Analysis
                                                 .Select(e => e.Value)
                                                 .ToArray();
               
-                                            data.Add(Math.Min(values.Length == 0 ? 0 : values.Average(), 1));
+                                            data.Add(Math.Min(values.Length == 0 ? 0 : Math.Round(values.Average() * 100, 2), 100));
                                         }
 
                                         writer.AppendLine("        name: '" + type.Replace("perf", String.Empty).ToUpper() + "',");

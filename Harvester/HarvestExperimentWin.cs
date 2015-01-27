@@ -69,6 +69,8 @@ namespace Harvester
             var threads = process.Threads
                 .ToArray();
 
+            var events = traceLog.Events.ToArray();
+
             // Get all context switches
             var switches = traceLog.Events
                 .Where(e => e.EventName.StartsWith("Thread/CSwitch"))

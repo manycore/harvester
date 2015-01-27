@@ -13,17 +13,26 @@ namespace Harvester
         static void Main(string[] args)
         {
             // Start the performance collection
-            //Collect(args.Length == 0 ? "Matmul" : args[0]);
+            var type = "analyze";
+            if(args.Length > 0)
+                type = args[0];
 
-            Analyze("MatmulIJK", "data/MatmulIJK");
-            Analyze("MatmulKJI", "data/MatmulKJI");
-            Analyze("MatmulKIJ", "data/MatmulKIJ");
+            if (type != "analyze")
+            {
+                Collect(type);
+            }
+            else
+            {
 
-            Analyze("ComputePi", "data/ComputePi");
-            Analyze("Mandelbrot", "data/Mandelbrot");
-            Analyze("NQueens", "data/NQueens");
-            Analyze("RayTracer", "data/RayTracer");
+                Analyze("MatmulIJK", "data/MatmulIJK");
+                Analyze("MatmulKJI", "data/MatmulKJI");
+                Analyze("MatmulKIJ", "data/MatmulKIJ");
 
+                Analyze("ComputePi", "data/ComputePi");
+                Analyze("Mandelbrot", "data/Mandelbrot");
+                Analyze("NQueens", "data/NQueens");
+                Analyze("RayTracer", "data/RayTracer");
+            }
 
             Console.WriteLine("Analysis: Completed");
             Environment.Exit(0);

@@ -72,7 +72,7 @@ namespace Harvester.Analysis
                     output.Add("hpf", frame, thread, hpf);
                     output.Add("ipc", frame, thread, cn.IPC);
 
-                    output.Add("l1perf", frame, thread, (multiplier * cn.L1Misses) / cycles);
+                    output.Add("l1perf", frame, thread, (multiplier * cn.L1Misses * 10) / cycles);
                     output.Add("l2perf", frame, thread, cn.L2Clock);
                     output.Add("l3perf", frame, thread, cn.L3Clock);
                     output.Add("tlbperf", frame, thread, cn.TLBClock);
