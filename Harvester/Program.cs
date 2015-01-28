@@ -23,7 +23,6 @@ namespace Harvester
             }
             else
             {
-
                 Analyze("MatmulIJK", "data/MatmulIJK");
                 Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("MatmulKIJ", "data/MatmulKIJ");
@@ -35,7 +34,8 @@ namespace Harvester
             }
 
             Console.WriteLine("Analysis: Completed");
-            Environment.Exit(0);
+            if (type != "analyze")
+                Environment.Exit(0);
             
         }
 

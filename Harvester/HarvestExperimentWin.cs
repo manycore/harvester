@@ -101,8 +101,8 @@ namespace Harvester
             output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));
             output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
-            var jsonName = this.WorkingDir.Name.ToLower();
-            output.WriteJson(jsonName, Path.Combine(this.WorkingDir.FullName, jsonName + ".js"));
+            // Export to JSON
+            JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
 
         }
 

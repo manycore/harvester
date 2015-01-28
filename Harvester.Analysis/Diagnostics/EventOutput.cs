@@ -14,6 +14,26 @@ namespace Harvester.Analysis
     /// </summary>
     public class EventOutput : List<EventEntry>
     {
+        /// <summary>
+        /// Constructs a new output.
+        /// </summary>
+        /// <param name="processName">The name of the process analyzed.</param>
+        public EventOutput(string processName)
+        {
+            this.ProcessName = processName;
+        }
+
+        #region Public Properties
+        /// <summary>
+        /// Gets or sets the name of the process analyzed.
+        /// </summary>
+        public string ProcessName
+        {
+            get;
+            set;
+        }
+        #endregion
+
         #region Public Members - Add()
         /// <summary>
         /// Adds a single event entry to the output.
@@ -141,80 +161,6 @@ namespace Harvester.Analysis
             File.WriteAllText(path, writer.ToString());
         }
 
-        /// <summary>
-        /// Writes the output to a csv file.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="path"></param>
-        public void WriteJson(string name, string path)
-        {
-            var writer = new StringBuilder();
-            var threads = this.Select(e => e.Tid).Distinct().ToArray();
-            var types = this.Select(e => e.Type)
-                .Distinct()
-                .Where(t => t.EndsWith("perf") || t.EndsWith("ipc"))
-                .ToArray();
-
-            // The JS object
-            writer.AppendLine("var " + name + " = perfdata = {");
-            {
-                writer.AppendLine("  name: '" + name + "',");
-                writer.Append("  threads: [");
-                {
-                    for (int ti = 0; ti < threads.Length; ++ti)
-                    {
-                        var tid = threads[ti];
-                        writer.AppendLine("{");
-                        {
-                            writer.AppendLine("      id: '" + tid + "',");
-                            writer.Append("      measures: [");
-                            {
-                                for (int mi = 0; mi < types.Length; ++mi)
-                                {
-                                    var type = types[mi];
-                                    writer.AppendLine("{");
-                                    {
-                                        var data = new List<double>();
-                                        foreach (var timeGroup in this.GroupBy(e => e.Time))
-                                        {
-                                            // Get the values
-                                            var values = timeGroup
-                                                .Where(t => t.Tid == tid && t.Type == type)
-                                                .Select(e => e.Value)
-                                                .ToArray();
-              
-                                            data.Add(Math.Min(values.Length == 0 ? 0 : Math.Round(values.Average() * 100, 2), 100));
-                                        }
-
-                                        writer.AppendLine("        name: '" + type.Replace("perf", String.Empty).ToUpper() + "',");
-                                        writer.AppendLine("        data: [" + 
-                                            data.Select(e => e.ToString(CultureInfo.InvariantCulture))
-                                                .Aggregate((a, b) => a + ", " + b)
-                                            + "]");
-                                    }
-                                    writer.Append("      }");
-                                    if (mi < types.Length - 1)
-                                        writer.Append(",");
-                                }
-                            }
-                            writer.AppendLine("]");
-                        }
-                        writer.Append("    }");
-                        if (ti < threads.Length - 1)
-                        {
-                            writer.AppendLine(",");
-                            writer.Append("    ");
-                        }
-                    }
-                }
-                writer.AppendLine("  ]");
-            }
-            writer.AppendLine("};");
-
-
-            // Write to file.
-            File.WriteAllText(path, writer.ToString());
-        }
         #endregion
     }
 

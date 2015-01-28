@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -39,12 +43,14 @@
   <ItemGroup>
     <Compile Include="Diagnostics\EventHwCounters.cs" />
     <Compile Include="Diagnostics\EventEntry.cs" />
+    <Compile Include="Diagnostics\EventExporter.cs" />
     <Compile Include="Diagnostics\EventThread.cs" />
     <Compile Include="Diagnostics\EventProcessor.cs" />
     <Compile Include="Diagnostics\EventFrame.cs" />
     <Compile Include="Diagnostics\Events\ContextSwitch.cs" />
     <Compile Include="Diagnostics\Events\PageFault.cs" />
     <Compile Include="Diagnostics\EventOutput.cs" />
+    <Compile Include="Exporters\JsonExporter.cs" />
     <Compile Include="Processors\SimpleProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -53,6 +59,9 @@
       <Project>{b68f4968-a7cf-41cc-ad6e-373db5e67944}</Project>
       <Name>Harvester.Tracing</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

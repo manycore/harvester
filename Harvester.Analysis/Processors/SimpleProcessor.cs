@@ -30,7 +30,7 @@ namespace Harvester.Analysis
         protected override EventOutput OnAnalyze()
         {
             // Here we will store our results
-            var output  = new EventOutput();
+            var output  = new EventOutput(this.Process.Name);
             
             // Process every frame
             foreach(var frame in this.Frames)
@@ -63,6 +63,7 @@ namespace Harvester.Analysis
                     var cycles = Math.Round(multiplier * cn.Cycles);
 
                     output.Add("cycles", frame, thread, cycles);
+                    output.Add("time", frame, thread, multiplier);
                     output.Add("l1miss", frame, thread, Math.Round(multiplier * cn.L1Misses));
                     output.Add("l2miss", frame, thread, Math.Round(multiplier * cn.L2Misses));
                     output.Add("l3miss", frame, thread, Math.Round(multiplier * cn.L3Misses));
@@ -72,11 +73,11 @@ namespace Harvester.Analysis
                     output.Add("hpf", frame, thread, hpf);
                     output.Add("ipc", frame, thread, cn.IPC);
 
-                    output.Add("l1perf", frame, thread, (multiplier * cn.L1Misses * 10) / cycles);
+                    output.Add("tlbperf", frame, thread, cn.TLBClock);
+                    output.Add("l1perf", frame, thread, (multiplier * cn.L2Hits * 10) / cycles);
                     output.Add("l2perf", frame, thread, cn.L2Clock);
                     output.Add("l3perf", frame, thread, cn.L3Clock);
-                    output.Add("tlbperf", frame, thread, cn.TLBClock);
-                    output.Add("hpfperf", frame, thread, (1000 * hpf) / cycles);
+                    output.Add("hpfperf", frame, thread, (hpf * 1050) / cycles); // "page fault and return is about 1050 cycles" - Linus Torvalds
                 }
      
             }
