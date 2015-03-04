@@ -39,8 +39,8 @@ namespace Harvester.Analysis
             // The output and global values
             var output = new JsonOutput();
             output.Name = source.ProcessName;
-            output.Duration = (max - min).TotalMilliseconds;
 
+     
             foreach(var tid in threads)
             {
                 var thread = new JsonThread(tid);
@@ -78,8 +78,26 @@ namespace Harvester.Analysis
                 output.Threads.Add(thread);
             }
 
-            // Get the number of frames
-            output.Frames = output.Threads.First().Measures.First().Data.Count;
+            // Only threads of the process we monitor
+            var ownThreads = source.Where(t => t.Pid != 0).ToArray();
+            var summableTypes = source
+                .Select(e => e.Type)
+                .Distinct()
+                .Where(t => !t.EndsWith("perf") && !t.EndsWith("ipc") && !t.EndsWith("time"))
+                .ToArray();
+
+            // Various variables
+            output.Info["duration"] = (max - min).TotalMilliseconds;
+            output.Info["frames"] = output.Threads.First().Measures.First().Data.Count;
+
+            foreach (var type in summableTypes)
+            {
+                output.Info[type] = ownThreads
+                    .Where(t => t.Type == type)
+                    .Select(t => t.Value)
+                    .Sum();
+            }
+            
 
             // Sort by runtime and remove the '0' thread
             output.Threads = output.Threads
@@ -101,11 +119,8 @@ namespace Harvester.Analysis
         [JsonProperty("name")]
         public string Name;
 
-        [JsonProperty("duration")]
-        public double Duration;
-
-        [JsonProperty("frames")]
-        public int Frames;
+        [JsonProperty("info")]
+        public Dictionary<string, object> Info = new Dictionary<string, object>();
 
         [JsonProperty("threads")]
         public List<JsonThread> Threads = new List<JsonThread>();
