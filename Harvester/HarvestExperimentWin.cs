@@ -65,9 +65,10 @@ namespace Harvester
              .Where(p => p.Name.StartsWith(processName))
              .FirstOrDefault();
 
-            // Get the threads
-            var threads = process.Threads
-                .ToArray();
+            var hwe = traceLog.Events
+                .Where(e => e.ProcessID == process.ProcessID)
+                //.Where(e => e.EventName.StartsWith("Harvester"))
+                .Select(e => e.EventName);
 
             var events = traceLog.Events.ToArray();
 

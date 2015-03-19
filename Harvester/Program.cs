@@ -23,7 +23,7 @@ namespace Harvester
             }
             else
             {
-                Analyze("EXCEL", "data/Excel");
+                Analyze("Matmul", "data/AccountB");
                /* Analyze("MatmulIJK", "data/MatmulIJK");
                 Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("MatmulKIJ", "data/MatmulKIJ");
@@ -49,7 +49,7 @@ namespace Harvester
             var os = HarvestProcess.FromBinary("os-win", "PerfMonitor.exe", Resources.os_win);
 
             pcm.Run("5");
-            os.Run(" -KernelEvents:ContextSwitch,MemoryPageFaults  start");
+            os.Run(" -KernelEvents:ContextSwitch,MemoryPageFaults /providers:FE2625C1-C10D-452C-B813-A8703EA9D2BA start");
 
             Console.WriteLine("Press any key to stop data collection...");
             Console.ReadKey();

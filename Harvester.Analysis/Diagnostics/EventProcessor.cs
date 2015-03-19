@@ -60,18 +60,51 @@ namespace Harvester.Analysis
         /// <returns></returns>
         private EventFrame[] GetFrames(string processName, ushort interval)
         {
-            // Get the proces to monitor
+            // Get the pid only
+            var pid = this.TraceLog.Processes
+                .Where(p => p.Name.StartsWith(processName))
+                .FirstOrDefault()
+                .ProcessID;
+      
+            // Mark of the start inside the process
+            var benchmarkBegin = DateTime.MinValue;
+            { 
+                var evt = TraceLog.Events
+                    .Where(e => e.ProcessID == pid)
+                    .Where(e => e.EventName.Contains("BenchmarkBegin"))
+                    .FirstOrDefault();
+                if(evt != null)
+                    benchmarkBegin = evt.TimeStamp;
+            }
+
+            // Mark of the end inside the process
+            var benchmarkEnd = DateTime.MinValue;
+            {
+                var evt = TraceLog.Events
+                    .Where(e => e.ProcessID == pid)
+                    .Where(e => e.EventName.Contains("BenchmarkEnd"))
+                    .FirstOrDefault();
+                if (evt != null)
+                    benchmarkEnd = evt.TimeStamp;
+            }
+
+            // Look the process info
             this.Process = this.TraceLog.Processes
-             .Where(p => p.Name.StartsWith(processName))
-             .FirstOrDefault();
+                .Where(p => p.Name.StartsWith(processName))
+                .FirstOrDefault();
 
             // Get the threads
             this.Threads = this.Process.Threads
                 .ToArray();
 
             // Define the timeframe of the experiment
-            this.Start = new DateTime(Math.Max(this.Process.StartTime.Ticks, this.Counters.First().Time.Ticks));
-            this.End = new DateTime(Math.Min(this.Process.EndTime.Ticks, this.Counters.Last().Time.Ticks));
+            this.Start = benchmarkBegin == DateTime.MinValue 
+                ? new DateTime(Math.Max(this.Process.StartTime.Ticks, this.Counters.First().Time.Ticks))
+                : benchmarkBegin;
+            this.End = benchmarkEnd == DateTime.MinValue 
+                ? new DateTime(Math.Min(this.Process.EndTime.Ticks, this.Counters.Last().Time.Ticks))
+                : benchmarkEnd;
+
             this.Duration = this.End - this.Start;
             this.Interval = TimeSpan.FromMilliseconds(interval);
             this.Count = (int)Math.Ceiling(this.Duration.TotalMilliseconds / this.Interval.TotalMilliseconds);
