@@ -23,8 +23,9 @@ namespace Harvester
             }
             else
             {
-                Analyze("Matmul", "data/AccountB");
-               /* Analyze("MatmulIJK", "data/MatmulIJK");
+                Analyze("MatmulIJK", "data/MatmulIJK");
+                /*Analyze("Matmul", "data/AccountB");
+                Analyze("MatmulIJK", "data/MatmulIJK");
                 Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("MatmulKIJ", "data/MatmulKIJ");
 
