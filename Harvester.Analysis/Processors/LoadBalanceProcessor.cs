@@ -1,6 +1,7 @@
 ﻿using Diagnostics.Tracing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,14 +49,20 @@ namespace Harvester.Analysis
                 // Process every thread within this frame
                 foreach (var thread in frame.Threads)
                 {
+                    // Get the number of cycles elapsed
+                    var multiplier = frame.GetShare(thread);
+                    var cycles = Math.Round(multiplier * cn.Cycles);
+                    output.Add("cycles", frame, thread, cycles);
+
                     // Time in nanoseconds
-                    var time = frame.GetTime(thread, System.Diagnostics.ThreadState.Ready) * 100;
-
-                    //Console.WriteLine( frame.ToTable() );
-
-                   
-                    output.Add("ready", frame, thread, time);
-
+                    output.Add("ready", frame, thread, frame.GetTime(thread, ThreadState.Ready) * 100);
+                    output.Add("running", frame, thread, frame.GetTime(thread, ThreadState.Running) * 100);
+                    output.Add("init", frame, thread, frame.GetTime(thread, ThreadState.Initialized) * 100);
+                    output.Add("standby", frame, thread, frame.GetTime(thread, ThreadState.Standby) * 100);
+                    output.Add("terminated", frame, thread, frame.GetTime(thread, ThreadState.Terminated) * 100);
+                    output.Add("transition", frame, thread, frame.GetTime(thread, ThreadState.Transition) * 100);
+                    output.Add("unknown", frame, thread, frame.GetTime(thread, ThreadState.Unknown) * 100);
+                    output.Add("wait", frame, thread, frame.GetTime(thread, ThreadState.Wait) * 100);
                 }
             }
 

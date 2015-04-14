@@ -28,7 +28,7 @@ namespace Harvester.Analysis
         /// <param name="destination">The output destination.</param>
         public override void Export(EventOutput source, StreamWriter destination)
         {
-            var threads = source.Select(e => e.Tid).Distinct().ToArray();
+           /* var threads = source.Select(e => e.Tid).Distinct().ToArray();
             var types = source.Select(e => e.Type)
                 .Distinct()
                 .ToArray();
@@ -36,19 +36,9 @@ namespace Harvester.Analysis
             var min = new DateTime(source.Select(e => e.Time).Min());
             var max = new DateTime(source.Select(e => e.Time).Max());
 
-            // The output and global values
-            var output = new JsonOutput();
-            output.Name = source.ProcessName;
+    */
 
-            var sb = new StringBuilder();
-            foreach(var e in source)
-            {
-                sb.AppendLine(e.Time + ", " + e.Tid + ", " + e.Cpu + ", " + e.Value);
-            }
-
-
-            // Write 
-            destination.Write(sb.ToString());
+            destination.Write(JsonConvert.SerializeObject(source, Formatting.Indented));
         }
     }
 
