@@ -93,7 +93,8 @@ namespace Harvester
                 .ToArray();
 
             // Create a new experiment
-            var experiment = new SimpleProcessor(traceLog, counters);
+            //var experiment = new SimpleProcessor(traceLog, counters);
+            var experiment = new LoadBalanceProcessor(traceLog, counters);
 
             // Analyze
             var output =  experiment.Analyze(processName, 50);
@@ -103,7 +104,8 @@ namespace Harvester
             output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
             // Export to JSON
-            JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
+            //JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
+            NewExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
 
         }
 

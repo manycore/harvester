@@ -74,6 +74,19 @@ namespace Harvester.Analysis
         };
 
         /// <summary>
+        /// Gets the custom thread.
+        /// </summary>
+        public static readonly EventThread Custom = new EventThread()
+        {
+            Tid = -1,
+            Pid = 0,
+            Uid = 0,
+            User = "N/A",
+            Process = "N/A"
+        };
+
+
+        /// <summary>
         /// Constructs a new thread info from trace thread & monitored process.
         /// </summary>
         /// <param name="thread"></param>
@@ -115,6 +128,11 @@ namespace Harvester.Analysis
                 Process = monitoredProcess.Name,
                 User = "user"
             };
+        }
+
+        public override string ToString()
+        {
+            return this.Tid.ToString();
         }
         #endregion
     }

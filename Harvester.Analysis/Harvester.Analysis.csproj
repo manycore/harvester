@@ -15,7 +15,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -50,7 +50,9 @@
     <Compile Include="Diagnostics\Events\ContextSwitch.cs" />
     <Compile Include="Diagnostics\Events\PageFault.cs" />
     <Compile Include="Diagnostics\EventOutput.cs" />
+    <Compile Include="Exporters\NewExporter.cs" />
     <Compile Include="Exporters\JsonExporter.cs" />
+    <Compile Include="Processors\LoadBalanceProcessor.cs" />
     <Compile Include="Processors\SimpleProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

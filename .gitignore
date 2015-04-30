@@ -150,3 +150,7 @@ $RECYCLE.BIN/
 # Mac crap
 .DS_Store
 packages/
+Harvester.sln.ide/edb.chk
+Harvester.sln.ide/edbres00001.jrs
+Harvester.sln.ide/edbres00002.jrs
+Harvester.sln.ide/storage.ide
