@@ -150,9 +150,9 @@ namespace Harvester.Analysis
                     // Console.WriteLine("Analysis: t = {0}, core = {1}, #hw = {2}, #cs = {3}", t, core, hw.Count(), cs.Count());
 
                     // Get an individual frame
-                    result.Add(
-                        GetFrame(timeFrom, core, cs)
-                        );
+                    var frame = GetFrame(timeFrom, core, cs);
+                    Console.WriteLine(frame.ToTable());
+                    result.Add(frame);
                 }
             }
 
