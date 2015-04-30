@@ -147,14 +147,14 @@ namespace Harvester.Analysis
         public string ToTable()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Thread  Init    Ready   Run     StandBy Term    Wait    Trans   Unkn");
+            sb.AppendLine("Thread    Ready     Run       StandBy   Wait      ");
             foreach (var thread in this.Map.Keys)
             {
-                sb.Append(thread.ToString().PadRight(8, ' '));
-                for (int i = 0; i < 8; ++i)
-                {
-                    sb.Append(this.Map[thread][i].ToString().PadRight(8, ' '));
-                }
+                sb.Append(thread.ToString().PadRight(10, ' '));
+                sb.Append(this.Map[thread][(int)ThreadState.Ready].ToString().PadRight(10, ' '));
+                sb.Append(this.Map[thread][(int)ThreadState.Running].ToString().PadRight(10, ' '));
+                sb.Append(this.Map[thread][(int)ThreadState.Standby].ToString().PadRight(10, ' '));
+                sb.Append(this.Map[thread][(int)ThreadState.Wait].ToString().PadRight(10, ' '));
                 sb.AppendLine();
             }
 

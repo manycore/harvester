@@ -195,11 +195,21 @@ namespace Harvester.Analysis
                 // How much time a thread switching in spent switched out?                
                 var lastSwitchOut = this.Switches
                     .Where(cs => cs.OldThreadId == sw.NewThreadId && cs.OldProcessId == sw.NewProcessId)
-                    .Where(cs => cs.TimeStamp100ns < sw.TimeStamp100ns)
+                    .Where(cs => cs.TimeStamp100ns >= fileTime && cs.TimeStamp100ns < sw.TimeStamp100ns)
                     .LastOrDefault();
+
+                // We didn't find it in our interval, find the absolute last
+                if(lastSwitchOut == null)
+                {
+                    lastSwitchOut = this.Switches
+                        .Where(cs => cs.OldThreadId == sw.NewThreadId && cs.OldProcessId == sw.NewProcessId)
+                        .Where(cs => cs.TimeStamp100ns < sw.TimeStamp100ns)
+                        .LastOrDefault();
+                }
+
                 if (lastSwitchOut != null)
                 {
-                    var switchOutTime = (double)(sw.TimeStamp100ns - lastSwitchOut.TimeStamp100ns);
+                    var switchOutTime = Math.Min((double)(sw.TimeStamp100ns - lastSwitchOut.TimeStamp100ns), maxTime);
                     switch(lastSwitchOut.State)
                     {
                         case ThreadState.Wait:
