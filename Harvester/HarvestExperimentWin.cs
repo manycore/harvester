@@ -105,7 +105,7 @@ namespace Harvester
 
             // Export to JSON
             //JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
-            NewExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
+            JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
 
         }
 

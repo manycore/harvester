@@ -50,10 +50,10 @@
     <Compile Include="Diagnostics\Events\ContextSwitch.cs" />
     <Compile Include="Diagnostics\Events\PageFault.cs" />
     <Compile Include="Diagnostics\EventOutput.cs" />
-    <Compile Include="Exporters\NewExporter.cs" />
     <Compile Include="Exporters\JsonExporter.cs" />
-    <Compile Include="Processors\LoadBalanceProcessor.cs" />
-    <Compile Include="Processors\SimpleProcessor.cs" />
+    <Compile Include="Exporters\DataLocalityExporter.cs" />
+    <Compile Include="Processors\StateProcessor.cs" />
+    <Compile Include="Processors\DataLocalityProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

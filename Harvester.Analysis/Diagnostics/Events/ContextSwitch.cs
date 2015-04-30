@@ -21,6 +21,9 @@ namespace Harvester.Analysis
             this.ProcessorNumber = sw.ProcessorNumber;
             this.TimeStamp = sw.TimeStamp;
             this.TimeStamp100ns = sw.TimeStamp100ns;
+
+            // Multiply by 10 to adjust the time as 100ns
+            this.NewThreadWaitTime = (int)sw.PayloadValue(15) * 10;
         }
 
         public readonly int OldThreadId;
@@ -31,10 +34,13 @@ namespace Harvester.Analysis
         public readonly ThreadState State;
         public readonly DateTime TimeStamp;
         public readonly long TimeStamp100ns;
+        public readonly int NewThreadWaitTime;
 
         public override string ToString()
         {
-            return String.Format("{0}\t{5}ns:\t({1}, {2}) -> ({3}, {4})", State, OldThreadId, OldProcessId, NewThreadId, NewProcessId, TimeStamp100ns);
+            return String.Format("{0}\t{5}ns:\t({1}, {2}) -> ({3}, {4}) wait: {6}", State, OldThreadId, OldProcessId, NewThreadId, NewProcessId, TimeStamp100ns, NewThreadWaitTime);
         }
     }
+
+
 }

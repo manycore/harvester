@@ -10,15 +10,15 @@ namespace Harvester.Analysis
     /// <summary>
     /// Does a simple cache miss processing.
     /// </summary>
-    public class SimpleProcessor : EventProcessor
+    public class DataLocalityProcessor : EventProcessor
     {
         #region Constructor
-                /// <summary>
+        /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
         /// <param name="events">The data file containing events.</param>
         /// <param name="counters">The data file containing harware coutnters.</param>
-        public SimpleProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
+        public DataLocalityProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
         {
 
         }
@@ -45,7 +45,7 @@ namespace Harvester.Analysis
                 foreach (var thread in frame.Threads)
                 {
                     // Get the multiplier for that thread
-                    var multiplier = frame.GetShare(thread);
+                    var multiplier = frame.GetOnCoreRatio(thread);
 
                     // Get the number of demand zero faults.
                     var dzf = frame.PageFaults

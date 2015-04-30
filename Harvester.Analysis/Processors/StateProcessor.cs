@@ -50,19 +50,15 @@ namespace Harvester.Analysis
                 foreach (var thread in frame.Threads)
                 {
                     // Get the number of cycles elapsed
-                    var multiplier = frame.GetShare(thread);
+                    var multiplier = frame.GetOnCoreRatio(thread);
                     var cycles = Math.Round(multiplier * cn.Cycles);
                     output.Add("cycles", frame, thread, cycles);
 
-                    // Time in nanoseconds
-                    output.Add("ready", frame, thread, frame.GetTime(thread, ThreadState.Ready) * 100);
-                    output.Add("running", frame, thread, frame.GetTime(thread, ThreadState.Running) * 100);
-                    output.Add("init", frame, thread, frame.GetTime(thread, ThreadState.Initialized) * 100);
-                    output.Add("standby", frame, thread, frame.GetTime(thread, ThreadState.Standby) * 100);
-                    output.Add("terminated", frame, thread, frame.GetTime(thread, ThreadState.Terminated) * 100);
-                    output.Add("transition", frame, thread, frame.GetTime(thread, ThreadState.Transition) * 100);
-                    output.Add("unknown", frame, thread, frame.GetTime(thread, ThreadState.Unknown) * 100);
-                    output.Add("wait", frame, thread, frame.GetTime(thread, ThreadState.Wait) * 100);
+                    // Time in milliseconds
+                    output.Add("ready", frame, thread, frame.GetTime(thread, ThreadState.Ready) / 10000);
+                    output.Add("running", frame, thread, frame.GetTime(thread, ThreadState.Running) / 10000);
+                    output.Add("standby", frame, thread, frame.GetTime(thread, ThreadState.Standby) / 10000);
+                    output.Add("wait", frame, thread, frame.GetTime(thread, ThreadState.Wait) / 10000);
                 }
             }
 

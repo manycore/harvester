@@ -31,6 +31,7 @@ namespace Harvester.Analysis
         protected TraceThread[] Threads;
         protected EventFrame[] Frames;
         protected PageFault[] Faults;
+        protected ContextSwitch[] Switches;
 
         /// <summary>
         /// Constructs a new processor for the provided data files.
@@ -115,9 +116,10 @@ namespace Harvester.Analysis
             Console.WriteLine("Analysis: Creating #{0} frames for {1}ms. interval...", this.Count, this.Interval.TotalMilliseconds);
             
             // Get all context switches
-            var switches = this.TraceLog.Events
+            this.Switches = this.TraceLog.Events
                 .Where(e => e.EventName.StartsWith("Thread/CSwitch"))
                 .Select(sw => new ContextSwitch(sw))
+                .OrderBy(sw => sw.TimeStamp100ns)
                 .ToArray();
 
             // Gets all page faults 
@@ -128,6 +130,7 @@ namespace Harvester.Analysis
 
             // The list for our results
             var result = new List<EventFrame>();
+
 
             // Upsample at the specified interval
             for (int i = 0; i < this.Count; ++i)
@@ -143,7 +146,7 @@ namespace Harvester.Analysis
                 for (int core = 0; core < this.CoreCount; ++core)
                 {
                     // Get corresponding context switches that happened on that particular core in the specified time frame
-                    var cs = switches
+                    var cs = this.Switches
                         .Where(e => e.TimeStamp >= timeFrom && e.TimeStamp <= timeTo)
                         .Where(e => e.ProcessorNumber == core)
                         .OrderBy(e => e.TimeStamp100ns);
@@ -177,7 +180,8 @@ namespace Harvester.Analysis
             foreach (var sw in switches)
             {
                 // Old thread id & process id
-                var thread = EventThread.FromTrace(sw.OldThreadId, sw.OldProcessId, this.Process);
+                var oldThread = EventThread.FromTrace(sw.OldThreadId, sw.OldProcessId, this.Process);
+                var newThread = EventThread.FromTrace(sw.NewThreadId, sw.NewProcessId, this.Process);
                 var state = sw.State;
 
                 // Set the time
@@ -187,11 +191,30 @@ namespace Harvester.Analysis
 
                 // What's the current running thread?
                 this.LastSwitch[core] = sw;
-
-                
+    
+                // How much time a thread switching in spent switched out?                
+                var lastSwitchOut = this.Switches
+                    .Where(cs => cs.OldThreadId == sw.NewThreadId && cs.OldProcessId == sw.NewProcessId)
+                    .Where(cs => cs.TimeStamp100ns < sw.TimeStamp100ns)
+                    .LastOrDefault();
+                if (lastSwitchOut != null)
+                {
+                    var switchOutTime = (double)(sw.TimeStamp100ns - lastSwitchOut.TimeStamp100ns);
+                    switch(lastSwitchOut.State)
+                    {
+                        case ThreadState.Wait:
+                        case ThreadState.Ready:
+                        case ThreadState.Standby:
+                            frame.IncrementTime(newThread, lastSwitchOut.State, switchOutTime);
+                            break;
+                    }
+                }
 
                 // Add to our frame
-                frame.Increment(thread, state, elapsed);
+                frame.IncrementTime(oldThread, ThreadState.Running, elapsed);
+
+                // Increment on-core time
+                frame.IncrementOnCoreTime(oldThread, elapsed);
             }
 
             // If there was no switches during this period of time, take the last running
@@ -200,7 +223,11 @@ namespace Harvester.Analysis
                 var sw = this.LastSwitch[core];
                 var thread = EventThread.FromTrace(sw.NewThreadId, sw.NewProcessId, this.Process);
 
-                frame.Increment(thread, sw.State, maxTime);
+                // Add to our frame
+                frame.IncrementTime(thread, ThreadState.Running, maxTime);
+
+                // Increment on-core time
+                frame.IncrementOnCoreTime(thread, maxTime);
             }
 
 

@@ -18,6 +18,9 @@ namespace Harvester.Analysis
         private readonly Dictionary<EventThread, double[]> Map
             = new Dictionary<EventThread, double[]>();
 
+        private readonly Dictionary<EventThread, double> OnCoreMap
+            = new Dictionary<EventThread, double>();
+
         /// <summary>
         /// Constructs a new frame.
         /// </summary>
@@ -97,12 +100,25 @@ namespace Harvester.Analysis
 
         #region Public Members
         /// <summary>
+        /// Increments the time spend switched on.
+        /// </summary>
+        /// <param name="thread">The thread to increment.</param>
+        /// <param name="elapsed">The time spent in that state.</param>
+        public void IncrementOnCoreTime(EventThread thread, double elapsed)
+        {
+            if (!this.OnCoreMap.ContainsKey(thread))
+                this.OnCoreMap.Add(thread, 0);
+
+            this.OnCoreMap[thread] += elapsed;
+        }
+
+        /// <summary>
         /// Increments the time for a particular thread/state combination.
         /// </summary>
         /// <param name="thread">The thread to increment.</param>
         /// <param name="state">The state of the thread.</param>
         /// <param name="elapsed">The time spent in that state.</param>
-        public void Increment(EventThread thread, ThreadState state, double elapsed)
+        public void IncrementTime(EventThread thread, ThreadState state, double elapsed)
         {
             if (!this.Map.ContainsKey(thread))
                 this.Map.Add(thread, new double[8]);
@@ -119,7 +135,7 @@ namespace Harvester.Analysis
             var sb = new StringBuilder();
             foreach(var thread in this.Threads)
             {
-                sb.Append(this.GetShare(thread).ToString("N2").PadRight(6));
+                sb.Append(this.GetOnCoreRatio(thread).ToString("N2").PadRight(6));
             }
             return sb.ToString();
         }
@@ -163,17 +179,6 @@ namespace Harvester.Analysis
         }
 
         /// <summary>
-        /// Gets the percentage of time for a particular thread.
-        /// </summary>
-        /// <param name="thread">The thread to query.</param>
-        /// <param name="state">The state to query.</param>
-        /// <returns>The relative time elapsed in the frame in that state.</returns>
-        public double GetShare(EventThread thread, ThreadState state)
-        {
-            return this.GetTime(thread, state) / this.Total;
-        }
-
-        /// <summary>
         /// Gets the thread time for a particular thread.
         /// </summary>
         /// <param name="thread">The thread to query.</param>
@@ -190,9 +195,16 @@ namespace Harvester.Analysis
         /// </summary>
         /// <param name="thread">The thread to query.</param>
         /// <returns>The time elapsed in the frame in any state.</returns>
-        public double GetShare(EventThread thread)
+        public double GetOnCoreRatio(EventThread thread)
         {
-            return this.GetTime(thread) / this.Total;
+            if (!this.OnCoreMap.ContainsKey(thread))
+                return 0;
+
+            // Get the grand total of the time
+            var total = this.OnCoreMap.Sum(t => t.Value);
+
+            // Return the current on-core ratio.
+            return this.OnCoreMap[thread] / total;
         }
         #endregion
     }
