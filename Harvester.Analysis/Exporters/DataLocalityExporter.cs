@@ -22,6 +22,14 @@ namespace Harvester.Analysis
         public static readonly DataLocalityExporter Default = new DataLocalityExporter();
 
         /// <summary>
+        /// Gets the export extension.
+        /// </summary>
+        public override string Extension
+        {
+            get { return "js"; }
+        }
+
+        /// <summary>
         /// Exports the data.
         /// </summary>
         /// <param name="source">The source output to export.</param>

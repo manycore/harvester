@@ -35,6 +35,14 @@ namespace Harvester.Analysis
                 this.Export(source, sw);
             }
         }
+
+        /// <summary>
+        /// Gets the extension to export.
+        /// </summary>
+        public virtual string Extension
+        {
+            get { return "json"; }
+        }
     }
 
 

@@ -10,6 +10,7 @@ using Harvester.Properties;
 using Diagnostics.Tracing;
 using System.Diagnostics;
 using Harvester.Analysis;
+using Analyzer = System.Collections.Generic.KeyValuePair<Harvester.Analysis.EventProcessor, Harvester.Analysis.EventExporter>;
 
 namespace Harvester
 {
@@ -92,15 +93,18 @@ namespace Harvester
                 .ToArray();
 
             // Create a new experiment
-            var processors = new EventProcessor[]{
-                 new DataLocalityProcessor(traceLog, counters),
-                 new StateProcessor(traceLog, counters)
+            var analyzers = new Analyzer[]{
+                 new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
+                 new Analyzer(new StateProcessor(traceLog, counters), JsonExporter.Default)
             };
 
             // 50 ms window
             const int window = 50;
-            foreach (var processor in processors)
+            foreach (var analyzer in analyzers)
             {
+                var processor = analyzer.Key;
+                var exporter = analyzer.Value;
+
                 Console.WriteLine("Processing: " + process.GetType().Name);
                 var output = processor.Analyze(processName, window);
 
@@ -109,8 +113,7 @@ namespace Harvester
                 output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
                 // Export
-                DataLocalityExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
-                JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
+                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + "." + exporter.Extension));
             }
 
         }
