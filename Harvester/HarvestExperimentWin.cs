@@ -67,7 +67,6 @@ namespace Harvester
 
             var hwe = traceLog.Events
                 .Where(e => e.ProcessID == process.ProcessID)
-                //.Where(e => e.EventName.StartsWith("Harvester"))
                 .Select(e => e.EventName);
 
             var events = traceLog.Events.ToArray();
@@ -93,19 +92,26 @@ namespace Harvester
                 .ToArray();
 
             // Create a new experiment
-            //var experiment = new SimpleProcessor(traceLog, counters);
-            var experiment = new LoadBalanceProcessor(traceLog, counters);
+            var processors = new EventProcessor[]{
+                 new DataLocalityProcessor(traceLog, counters),
+                 new StateProcessor(traceLog, counters)
+            };
 
-            // Analyze
-            var output =  experiment.Analyze(processName, 50);
+            // 50 ms window
+            const int window = 50;
+            foreach (var processor in processors)
+            {
+                Console.WriteLine("Processing: " + process.GetType().Name);
+                var output = processor.Analyze(processName, window);
 
-            // Write the output
-            output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));
-            output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
+                // Write the output
+                output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));
+                output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
-            // Export to JSON
-            //JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
-            JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
+                // Export
+                DataLocalityExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".js"));
+                JsonExporter.Default.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + ".json"));
+            }
 
         }
 

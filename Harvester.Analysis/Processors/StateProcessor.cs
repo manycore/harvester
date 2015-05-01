@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace Harvester.Analysis
 {
-    public class LoadBalanceProcessor : EventProcessor
+    public class StateProcessor : EventProcessor
     {
         /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
         /// <param name="events">The data file containing events.</param>
         /// <param name="counters">The data file containing harware coutnters.</param>
-        public LoadBalanceProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
+        public StateProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
         {
 
         }
