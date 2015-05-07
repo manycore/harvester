@@ -23,8 +23,7 @@ namespace Harvester
             }
             else
             {
-                Analyze("MatmulKIJ", "data/MatmulKIJ");
-                //Analyze("Matmul", "data/ParticleS");
+                Analyze("MatmulIJK", "data/MatmulIJK");
                 /*
                 Analyze("Matmul", "data/AccountB");
                 Analyze("MatmulIJK", "data/MatmulIJK");
@@ -33,7 +32,14 @@ namespace Harvester
                 Analyze("ComputePi", "data/ComputePi");
                 Analyze("Mandelbrot", "data/Mandelbrot");
                 Analyze("NQueens", "data/NQueens");
+                Analyze("Matmul", "data/ParticleS");
                 Analyze("RayTracer", "data/RayTracer");
+                Analyze("Matmul", "data/AccountA");
+                Analyze("Matmul", "data/MergeSortP");
+                Analyze("Matmul", "data/MergeSortS");
+                Analyze("Matmul", "data/ParticleP");
+                Analyze("Matmul", "data/NodeJS");       // not working
+                Analyze("Matmul", "data/Spike");        // not working
                 */
             }
 
