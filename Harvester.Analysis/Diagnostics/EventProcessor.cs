@@ -32,6 +32,7 @@ namespace Harvester.Analysis
         protected EventFrame[] Frames;
         protected PageFault[] Faults;
         protected ContextSwitch[] Switches;
+        protected ThreadLifetime[] Lifetimes;
 
         /// <summary>
         /// Constructs a new processor for the provided data files.
@@ -114,11 +115,23 @@ namespace Harvester.Analysis
             Console.WriteLine("Analysis: duration = {0}", this.Duration);
             Console.WriteLine("Analysis: #cores = {0}", CoreCount);
             Console.WriteLine("Analysis: Creating #{0} frames for {1}ms. interval...", this.Count, this.Interval.TotalMilliseconds);
-            
+
             // Get all context switches
+            var safeWindow = TimeSpan.FromSeconds(1);
             this.Switches = this.TraceLog.Events
                 .Where(e => e.EventName.StartsWith("Thread/CSwitch"))
+                .Where(e => e.TimeStamp > this.Start - safeWindow)
+                .Where(e => e.TimeStamp < this.End + safeWindow)
                 .Select(sw => new ContextSwitch(sw))
+                .OrderBy(sw => sw.TimeStamp100ns)
+                .ToArray();
+
+            // Get all lifetimes
+            this.Lifetimes = this.TraceLog.Events
+                .Where(e => e.EventName.StartsWith("Thread/Start") || e.EventName.StartsWith("Thread/End"))
+                .Where(e => e.TimeStamp > this.Start - safeWindow)
+                .Where(e => e.TimeStamp < this.End + safeWindow)
+                .Select(e => new ThreadLifetime(e, e.EventName.StartsWith("Thread/Start") ? ThreadLifetimeType.Start : ThreadLifetimeType.End))
                 .OrderBy(sw => sw.TimeStamp100ns)
                 .ToArray();
 
@@ -176,6 +189,8 @@ namespace Harvester.Analysis
             // Construct a new frame
             var frame = new EventFrame(time, this.Interval, core);
             var previous = 0L;
+
+
 
             foreach (var sw in switches)
             {

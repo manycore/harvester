@@ -23,15 +23,18 @@ namespace Harvester
             }
             else
             {
-                //Analyze("Matmul", "data/AccountB");
-                Analyze("MatmulIJK", "data/MatmulIJK");
-                /*Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("MatmulKIJ", "data/MatmulKIJ");
-
+                //Analyze("Matmul", "data/ParticleS");
+                /*
+                Analyze("Matmul", "data/AccountB");
+                Analyze("MatmulIJK", "data/MatmulIJK");
+                Analyze("MatmulKIJ", "data/MatmulKIJ");
+                Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("ComputePi", "data/ComputePi");
                 Analyze("Mandelbrot", "data/Mandelbrot");
                 Analyze("NQueens", "data/NQueens");
-                Analyze("RayTracer", "data/RayTracer");*/
+                Analyze("RayTracer", "data/RayTracer");
+                */
             }
 
             Console.WriteLine("Analysis: Completed");

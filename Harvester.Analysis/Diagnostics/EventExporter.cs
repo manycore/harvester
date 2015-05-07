@@ -37,6 +37,15 @@ namespace Harvester.Analysis
         }
 
         /// <summary>
+        /// Gets the name to export.
+        /// </summary>
+        public virtual string Name
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the extension to export.
         /// </summary>
         public virtual string Extension
