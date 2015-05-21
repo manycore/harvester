@@ -37,14 +37,15 @@ namespace Harvester.Analysis
                 // Get corresponding hardware counters 
                 var cn = frame.HwCounters;
 
-                var contextSwitches = this.TraceLog.Events
+                /*var contextSwitches = this.TraceLog.Events
                     .Where(e => e.EventName == "Thread/CSwitch")
                     .Where(e => e.ProcessorNumber == core)
+                    .Where(e => e.ProcessID == this.Process.ProcessID)
                     .Where(e => e.TimeStamp >= frame.Time)
                     .Where(e => e.TimeStamp <= frame.Time + frame.Duration)
                     .Count();
 
-                output.Add("switch", frame, EventThread.Custom, contextSwitches);
+                output.Add("switch", frame, EventThread.Custom, contextSwitches);*/
 
                 // Process every thread within this frame
                 foreach (var thread in frame.Threads)

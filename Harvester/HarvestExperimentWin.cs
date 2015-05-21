@@ -94,7 +94,7 @@ namespace Harvester
 
             // Create a new experiment
             var analyzers = new Analyzer[]{
-                //new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
+                new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
                 new Analyzer(new StateProcessor(traceLog, counters), new JsonExporter() { Name = "states" }),
                 new Analyzer(new SwitchProcessor(traceLog, counters), new JsonExporter() { Name = "switches" })
             };
