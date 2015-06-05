@@ -38,8 +38,13 @@ namespace Harvester
                 Analyze("Matmul", "data/MergeSortP");
                 Analyze("Matmul", "data/MergeSortS");
                 Analyze("Matmul", "data/ParticleP");
-                Analyze("Matmul", "data/NodeJS");       // not working
-                Analyze("Matmul", "data/Spike");        // not working
+                Analyze("Matmul", "data/PhaseA");
+                Analyze("Matmul", "data/PhaseB");
+                Analyze("Matmul", "data/BadCacheA");
+                Analyze("node", "data/NodeJS");
+                Analyze("Server", "data/Spike");
+                Analyze("EXCEL", "data/Excel");
+                Analyze("WINWORD", "data/Word");
                 */
             }
 
