@@ -28,9 +28,10 @@ namespace Harvester
         /// Prepares the files in the experiment directory.
         /// </summary>
         /// <param name="processName">The process to analyze.</param>
+        /// <param name="name">The friendly name to use.</param>
         /// <param name="os">The operating system data collector.</param>
         /// <param name="pcm">The hardware counters data collector.</param>
-        public override void Merge(string processName, HarvestProcess pcm, HarvestProcess os)
+        public override void Merge(string processName, string name, HarvestProcess pcm, HarvestProcess os)
         {
             // Files
             var pcmCsv = Path.Combine(this.WorkingDir.FullName, "raw-pcm.csv");
@@ -113,7 +114,7 @@ namespace Harvester
                 output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
                 // Export
-                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, processName.ToLower() + "." + exporter.Extension));
+                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, name.ToLower() + "." + exporter.Extension));
             }
 
         }
