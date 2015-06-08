@@ -23,37 +23,22 @@ namespace Harvester.Analysis
         {
             // Here we will store our results
             var output = new EventOutput(this.Process.Name);
-            /*var processes = this.TraceLog.Processes
-                .Select(p => new
-                {
-                    Name = p.Name,
-                    Id = p.ProcessID
-                })
-                .ToArray();
 
-            // Get the context switches
-            var contextSwitches = this.Switches
-                .Where(e => e.TimeStamp >= this.Start)
-                .Where(e => e.TimeStamp <= this.End)
-                .ToArray();
+            // This is for mapping pointers to a lock number
+            var locks = new Dictionary<long, int>();
+            var locki = 0;
 
-            foreach(var sw in contextSwitches)
+            // Export every event
+            foreach (var ev in this.LockAcquisitions)
             {
-                var program = processes
-                    .Where(p => p.Id == sw.NewProcessId)
-                    .First();
+                if (!locks.ContainsKey(ev.Lock0))
+                    locks[ev.Lock0] = ++locki;
+                if (!locks.ContainsKey(ev.Lock1))
+                    locks[ev.Lock1] = ++locki;
 
-                output.Add("sw", program.Name, "", sw.TimeStamp, 1, sw.NewThreadId, sw.NewProcessId, sw.ProcessorNumber, 0);
+                output.Add(ev.Type.ToString().ToLowerInvariant(), this.Process.Name, "", ev.TimeStamp, locks[ev.Lock0], ev.ThreadId, ev.ProcessId, ev.ProcessorNumber, 0);
+                output.Add(ev.Type.ToString().ToLowerInvariant(), this.Process.Name, "", ev.TimeStamp, locks[ev.Lock1], ev.ThreadId, ev.ProcessId, ev.ProcessorNumber, 0);
             }
-
-            // Only export relevant processes
-            var lifetimes = this.Lifetimes
-                .Where(e => e.ProcessId == this.Process.ProcessID);
-            foreach(var lt in lifetimes)
-            {
-                output.Add(lt.State.ToString().ToLowerInvariant(),
-                    this.Process.Name, "", lt.TimeStamp, 1, lt.ThreadId, lt.ProcessId, lt.ProcessorNumber, 0);
-            }*/
 
             // Return the results
             return output;

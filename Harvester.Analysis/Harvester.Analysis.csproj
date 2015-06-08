@@ -44,6 +44,7 @@
     <Compile Include="Diagnostics\EventHwCounters.cs" />
     <Compile Include="Diagnostics\EventEntry.cs" />
     <Compile Include="Diagnostics\EventExporter.cs" />
+    <Compile Include="Diagnostics\Events\LockAcquisition.cs" />
     <Compile Include="Diagnostics\Events\ThreadLifetime.cs" />
     <Compile Include="Diagnostics\EventThread.cs" />
     <Compile Include="Diagnostics\EventProcessor.cs" />

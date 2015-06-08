@@ -31,6 +31,7 @@ namespace Harvester.Analysis
         protected PageFault[] Faults;
         protected ContextSwitch[] Switches;
         protected ThreadLifetime[] Lifetimes;
+        protected LockAcquisition[] LockAcquisitions;
 
         // Cache
         private readonly Dictionary<int, ContextSwitch> LookupLastSwitch =
@@ -77,6 +78,7 @@ namespace Harvester.Analysis
             this.Faults = preprocessor.Faults;
             this.Switches = preprocessor.Switches;
             this.Lifetimes = preprocessor.Lifetimes;
+            this.LockAcquisitions = preprocessor.LockAcquisitions;
 
             // A last switch per core
             for (int i = 0; i < this.CoreCount; ++i)
@@ -171,6 +173,15 @@ namespace Harvester.Analysis
             this.Faults = this.TraceLog.Events
                 .Where(e => e.EventName.StartsWith("PageFault"))
                 .Select(e => new PageFault(e))
+                .ToArray();
+
+            // Gets all lock acquisition events
+            this.LockAcquisitions = this.TraceLog.Events
+                .Where(e => e.EventName.EndsWith("LockSuccess") || e.EventName.EndsWith("LockFailure"))
+                .Where(e => e.TimeStamp > this.Start - safeWindow)
+                .Where(e => e.TimeStamp < this.End + safeWindow)
+                .Select(e => new LockAcquisition(e, e.EventName.EndsWith("LockSuccess") ? LockAcquisitionType.Success : LockAcquisitionType.Failure))
+                .OrderBy(sw => sw.TimeStamp100ns)
                 .ToArray();
 
             // The list for our results
