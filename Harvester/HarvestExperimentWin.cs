@@ -95,8 +95,9 @@ namespace Harvester
 
             // Create a new experiment
             var analyzers = new Analyzer[]{
-                 new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
-                 new Analyzer(new StateProcessor(traceLog, counters), JsonExporter.Default)
+                new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
+                new Analyzer(new StateProcessor(traceLog, counters), new JsonExporter() { Name = "states" }),
+                new Analyzer(new SwitchProcessor(traceLog, counters), new JsonExporter() { Name = "switches" })
             };
 
             // 50 ms window
@@ -114,7 +115,11 @@ namespace Harvester
                 output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
                 // Export
-                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, name.ToLower() + "." + exporter.Extension));
+                var fname = exporter.Name == null 
+                    ? name.ToLower()
+                    : String.Format("{0}.{1}", name.ToLower(), exporter.Name);
+
+                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, fname + "." + exporter.Extension));
             }
 
         }

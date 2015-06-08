@@ -30,7 +30,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// The user name.
         /// </summary>
-        [JsonProperty("user")]
+        [JsonIgnore]
         public string User;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Harvester.Analysis
         /// <summary>
         /// The user number of the event.
         /// </summary>
-        [JsonProperty("uid")]
+        [JsonIgnore]
         public int Uid;
 
         /// <summary>

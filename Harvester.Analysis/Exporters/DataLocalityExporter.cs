@@ -26,7 +26,7 @@ namespace Harvester.Analysis
         /// </summary>
         public override string Extension
         {
-            get { return "js"; }
+            get { return "dl.json"; }
         }
 
         /// <summary>
@@ -114,9 +114,7 @@ namespace Harvester.Analysis
                 .ToList();
 
             // Write 
-            destination.WriteLine(
-                "var " + output.Name + " = perfdata = " + JsonConvert.SerializeObject(output)
-                );
+            destination.WriteLine(JsonConvert.SerializeObject(output));
         }
     }
 
