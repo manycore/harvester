@@ -50,6 +50,33 @@ namespace Harvester.Analysis
             for (int i = 0; i < this.CoreCount; ++i)
                 this.LastSwitch.Add(i, null);
         }
+
+        /// <summary>
+        /// Constructs a new processor for the provided data files.
+        /// </summary>
+        /// <param name="preprocessor">The preprocessor to use (copies everything)</param>
+        public EventProcessor(EventProcessor preprocessor)
+        {
+            // Copy stuff we already calculated
+            this.TraceLog = preprocessor.TraceLog;
+            this.Counters = preprocessor.Counters;
+            this.Start = preprocessor.Start;
+            this.End = preprocessor.Start;
+            this.Duration = preprocessor.Duration;
+            this.Interval = preprocessor.Interval;
+            this.Count = preprocessor.Count;
+            this.CoreCount = preprocessor.CoreCount;
+            this.Process = preprocessor.Process;
+            this.Threads = preprocessor.Threads;
+            this.Frames = preprocessor.Frames;
+            this.Faults = preprocessor.Faults;
+            this.Switches = preprocessor.Switches;
+            this.Lifetimes = preprocessor.Lifetimes;
+
+            // A last switch per core
+            for (int i = 0; i < this.CoreCount; ++i)
+                this.LastSwitch.Add(i, null);
+        }
         #endregion
 
         #region Frame Members
@@ -352,9 +379,13 @@ namespace Harvester.Analysis
         public EventOutput Analyze(string processName, ushort interval)
         {
             // First we need to gather frames
-            this.Frames = this.GetFrames(processName, interval);
+            if (this.Frames == null)
+            {
+                Console.WriteLine("Analysis: Preprocessing...");
+                this.Frames = this.GetFrames(processName, interval);
+            }
 
-            Console.WriteLine("Analysis: Performing further analysis...");
+            Console.WriteLine("Analysis: Performing analysis...");
             return this.OnAnalyze();
         }
         #endregion

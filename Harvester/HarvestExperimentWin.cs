@@ -93,15 +93,22 @@ namespace Harvester
             var counters = TraceCounter.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
                 .ToArray();
 
-            // Create a new experiment
-            var analyzers = new Analyzer[]{
-                new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
-                new Analyzer(new StateProcessor(traceLog, counters), new JsonExporter() { Name = "states" }),
-                new Analyzer(new SwitchProcessor(traceLog, counters), new JsonExporter() { Name = "switches" })
-            };
-
             // 50 ms window
             const int window = 50;
+
+            // Use a preprocessor to speed things up
+            var preprocessor = new PreProcessor(traceLog, counters);
+            preprocessor.Analyze(processName, window);
+
+            // Create a new experiment
+            var analyzers = new Analyzer[]{
+                new Analyzer(new DataLocalityProcessor(preprocessor), DataLocalityExporter.Default),
+                new Analyzer(new StateProcessor(preprocessor), new JsonExporter() { Name = "states" }),
+                new Analyzer(new SwitchProcessor(preprocessor), new JsonExporter() { Name = "switches" }),
+                new Analyzer(new LockProcessor(preprocessor), new JsonExporter() { Name = "locks" }),
+            };
+
+            // Now run every analyzer
             foreach (var analyzer in analyzers)
             {
                 var processor = analyzer.Key;

@@ -53,6 +53,8 @@
     <Compile Include="Diagnostics\EventOutput.cs" />
     <Compile Include="Exporters\JsonExporter.cs" />
     <Compile Include="Exporters\DataLocalityExporter.cs" />
+    <Compile Include="Processors\PreProcessor.cs" />
+    <Compile Include="Processors\LockProcessor.cs" />
     <Compile Include="Processors\SwitchProcessor.cs" />
     <Compile Include="Processors\StateProcessor.cs" />
     <Compile Include="Processors\DataLocalityProcessor.cs" />

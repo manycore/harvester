@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Harvester.Analysis
 {
-    public class SwitchProcessor : EventProcessor
+    public class LockProcessor : EventProcessor
     {
         /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
         /// <param name="preprocessor">Preprocessor to use</param>
-        public SwitchProcessor(EventProcessor preprocessor) : base(preprocessor) { }
+        public LockProcessor(EventProcessor preprocessor) : base(preprocessor) { }
 
         /// <summary>
         /// Invoked when an analysis needs to be performed.
@@ -23,7 +23,7 @@ namespace Harvester.Analysis
         {
             // Here we will store our results
             var output = new EventOutput(this.Process.Name);
-            var processes = this.TraceLog.Processes
+            /*var processes = this.TraceLog.Processes
                 .Select(p => new
                 {
                     Name = p.Name,
@@ -53,7 +53,7 @@ namespace Harvester.Analysis
             {
                 output.Add(lt.State.ToString().ToLowerInvariant(),
                     this.Process.Name, "", lt.TimeStamp, 1, lt.ThreadId, lt.ProcessId, lt.ProcessorNumber, 0);
-            }
+            }*/
 
             // Return the results
             return output;

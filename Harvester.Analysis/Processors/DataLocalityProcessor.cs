@@ -16,12 +16,8 @@ namespace Harvester.Analysis
         /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
-        /// <param name="events">The data file containing events.</param>
-        /// <param name="counters">The data file containing harware coutnters.</param>
-        public DataLocalityProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
-        {
-
-        }
+        /// <param name="preprocessor">Preprocessor to use</param>
+        public DataLocalityProcessor(EventProcessor preprocessor) : base(preprocessor) {}
         #endregion
 
         /// <summary>
