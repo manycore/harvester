@@ -23,31 +23,31 @@ namespace Harvester
             }
             else
             {
-                Analyze("Matmul", "philosophers45", "data/Philosophers45");
-
-                /*Analyze("MatmulKJI", "data/MatmulKJI");
-                Analyze("MatmulIJK", "data/MatmulIJK");
-                Analyze("Matmul", "data/AccountB");
-                Analyze("MatmulIJK", "data/MatmulIJK");
-                Analyze("MatmulKIJ", "data/MatmulKIJ");
-                Analyze("MatmulKJI", "data/MatmulKJI");
-                Analyze("ComputePi", "data/ComputePi");
-                Analyze("Mandelbrot", "data/Mandelbrot");
-                Analyze("NQueens", "data/NQueens");
-                Analyze("Matmul", "data/ParticleS");
-                Analyze("RayTracer", "data/RayTracer");
-                Analyze("Matmul", "data/AccountA");
-                Analyze("Matmul", "data/MergeSortP");
-                Analyze("Matmul", "data/MergeSortS");
-                Analyze("Matmul", "data/ParticleP");
-                Analyze("Matmul", "data/PhaseA");
-                Analyze("Matmul", "data/PhaseB");
-                Analyze("Matmul", "data/BadCacheA");
-                Analyze("node", "data/NodeJS");
-                Analyze("Server", "data/Spike");
-                Analyze("EXCEL", "data/Excel");
-                Analyze("WINWORD", "data/Word");
-                */
+                Parallel.Invoke(
+                    () => Analyze("Matmul", "philosophers45", "data/Philosophers45"),
+                    () => Analyze("MatmulKJI", "matmulkji", "data/MatmulKJI"),
+                    () => Analyze("MatmulIJK", "matmulijk", "data/MatmulIJK"),
+                    () => Analyze("Matmul", "accountb", "data/AccountB"),
+                    () => Analyze("MatmulIJK", "matmulijk", "data/MatmulIJK"),
+                    () => Analyze("MatmulKIJ", "matmulkij", "data/MatmulKIJ"),
+                    () => Analyze("MatmulKJI", "matmulkji", "data/MatmulKJI"),
+                    () => Analyze("ComputePi", "computepi", "data/ComputePi"),
+                    () => Analyze("Mandelbrot", "mandelbrot", "data/Mandelbrot"),
+                    () => Analyze("NQueens", "nqueens", "data/NQueens"),
+                    () => Analyze("Matmul", "particles", "data/ParticleS"),
+                    () => Analyze("RayTracer", "raytracer", "data/RayTracer"),
+                    () => Analyze("Matmul", "accounta", "data/AccountA"),
+                    () => Analyze("Matmul", "mergesortp", "data/MergeSortP"),
+                    () => Analyze("Matmul", "mergesorts", "data/MergeSortS"),
+                    () => Analyze("Matmul", "particlep", "data/ParticleP"),
+                    () => Analyze("Matmul", "phasea", "data/PhaseA"),
+                    () => Analyze("Matmul", "phaseb", "data/PhaseB"),
+                    () => Analyze("Matmul", "badcachea", "data/BadCacheA"),
+                    () => Analyze("node", "nodejs", "data/NodeJS"),
+                    () => Analyze("Server", "spike", "data/Spike"),
+                    () => Analyze("EXCEL", "excel", "data/Excel"),
+                    () => Analyze("WINWORD", "word", "data/Word")
+                );
             }
 
             Console.WriteLine("Analysis: Completed");
