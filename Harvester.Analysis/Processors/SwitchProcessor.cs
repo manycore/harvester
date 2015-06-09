@@ -13,12 +13,8 @@ namespace Harvester.Analysis
         /// <summary>
         /// Constructs a new processor for the provided data files.
         /// </summary>
-        /// <param name="events">The data file containing events.</param>
-        /// <param name="counters">The data file containing harware coutnters.</param>
-        public SwitchProcessor(TraceLog events, TraceCounter[] counters): base(events, counters)
-        {
-
-        }
+        /// <param name="preprocessor">Preprocessor to use</param>
+        public SwitchProcessor(EventProcessor preprocessor) : base(preprocessor) { }
 
         /// <summary>
         /// Invoked when an analysis needs to be performed.

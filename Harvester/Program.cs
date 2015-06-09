@@ -23,8 +23,10 @@ namespace Harvester
             }
             else
             {
+                Analyze("Matmul", "philosophers45", "data/Philosophers45");
+
+                /*Analyze("MatmulKJI", "data/MatmulKJI");
                 Analyze("MatmulIJK", "data/MatmulIJK");
-                /*
                 Analyze("Matmul", "data/AccountB");
                 Analyze("MatmulIJK", "data/MatmulIJK");
                 Analyze("MatmulKIJ", "data/MatmulKIJ");
@@ -75,11 +77,12 @@ namespace Harvester
             os.WaitForExit();
             pcm.WaitForExit();
 
+            
 
             // Analyze
             var experiment = new HarvestExperimentWin();
             Console.WriteLine("Copying and merging to the experiment folder...");
-            experiment.Merge(processName, pcm, os);
+            experiment.Merge(processName, processName, pcm, os);
 
         }
 
@@ -88,10 +91,10 @@ namespace Harvester
         /// </summary>
         /// <param name="processName">The process to analyze.</param>
         /// <param name="folder">The folder containing the data</param>
-        static void Analyze(string processName, string folder)
+        static void Analyze(string processName, string name, string folder)
         {
             var experiment = new HarvestExperimentWin(folder);
-            experiment.Merge(processName, null, null);
+            experiment.Merge(processName, name, null, null);
         }
 
 

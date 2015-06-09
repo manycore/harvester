@@ -18,8 +18,6 @@ namespace Harvester.Analysis
         #region Constructors
         protected readonly TraceLog TraceLog;
         protected readonly TraceCounter[] Counters;
-        private readonly Dictionary<int, ContextSwitch> LastSwitch =
-            new Dictionary<int, ContextSwitch>();
 
         protected DateTime Start;
         protected DateTime End;
@@ -33,6 +31,14 @@ namespace Harvester.Analysis
         protected PageFault[] Faults;
         protected ContextSwitch[] Switches;
         protected ThreadLifetime[] Lifetimes;
+        protected LockAcquisition[] LockAcquisitions;
+
+        // Cache
+        private readonly Dictionary<int, ContextSwitch> LookupLastSwitch =
+            new Dictionary<int, ContextSwitch>();
+        private readonly Dictionary<int, List<ContextSwitch>> LookupSwitchByThread =
+            new Dictionary<int, List<ContextSwitch>>();
+
 
         /// <summary>
         /// Constructs a new processor for the provided data files.
@@ -48,7 +54,35 @@ namespace Harvester.Analysis
 
             // A last switch per core
             for (int i = 0; i < this.CoreCount; ++i)
-                this.LastSwitch.Add(i, null);
+                this.LookupLastSwitch.Add(i, null);
+        }
+
+        /// <summary>
+        /// Constructs a new processor for the provided data files.
+        /// </summary>
+        /// <param name="preprocessor">The preprocessor to use (copies everything)</param>
+        public EventProcessor(EventProcessor preprocessor)
+        {
+            // Copy stuff we already calculated
+            this.TraceLog = preprocessor.TraceLog;
+            this.Counters = preprocessor.Counters;
+            this.Start = preprocessor.Start;
+            this.End = preprocessor.Start;
+            this.Duration = preprocessor.Duration;
+            this.Interval = preprocessor.Interval;
+            this.Count = preprocessor.Count;
+            this.CoreCount = preprocessor.CoreCount;
+            this.Process = preprocessor.Process;
+            this.Threads = preprocessor.Threads;
+            this.Frames = preprocessor.Frames;
+            this.Faults = preprocessor.Faults;
+            this.Switches = preprocessor.Switches;
+            this.Lifetimes = preprocessor.Lifetimes;
+            this.LockAcquisitions = preprocessor.LockAcquisitions;
+
+            // A last switch per core
+            for (int i = 0; i < this.CoreCount; ++i)
+                this.LookupLastSwitch.Add(i, null);
         }
         #endregion
 
@@ -141,16 +175,33 @@ namespace Harvester.Analysis
                 .Select(e => new PageFault(e))
                 .ToArray();
 
+            // Gets all lock acquisition events
+            this.LockAcquisitions = this.TraceLog.Events
+                .Where(e => e.EventName.EndsWith("LockSuccess") || e.EventName.EndsWith("LockFailure"))
+                .Where(e => e.TimeStamp > this.Start - safeWindow)
+                .Where(e => e.TimeStamp < this.End + safeWindow)
+                .Select(e => new LockAcquisition(e, e.EventName.EndsWith("LockSuccess") ? LockAcquisitionType.Success : LockAcquisitionType.Failure))
+                .OrderBy(sw => sw.TimeStamp100ns)
+                .ToArray();
+
             // The list for our results
             var result = new List<EventFrame>();
 
+            // Build a by-thread lookup cache
+            for (int i = 0; i < this.Switches.Length;++i)
+            {
+                var sw = this.Switches[i];
+                if (!this.LookupSwitchByThread.ContainsKey(sw.OldThreadId))
+                    this.LookupSwitchByThread[sw.OldThreadId] = new List<ContextSwitch>();
+                this.LookupSwitchByThread[sw.OldThreadId].Add(sw);
+            }
 
             // Upsample at the specified interval
             for (int i = 0; i < this.Count; ++i)
             {
                 // Current time
                 var t = (int)this.Interval.TotalMilliseconds * i;
-               
+
                 // The interval starting time
                 var timeFrom = this.Start + TimeSpan.FromMilliseconds(t);
                 var timeTo = this.Start + TimeSpan.FromMilliseconds(t) + this.Interval;
@@ -205,19 +256,19 @@ namespace Harvester.Analysis
                 previous = current;
 
                 // What's the current running thread?
-                this.LastSwitch[core] = sw;
+                this.LookupLastSwitch[core] = sw;
     
                 // How much time a thread switching in spent switched out?                
-                var lastSwitchOut = this.Switches
-                    .Where(cs => cs.OldThreadId == sw.NewThreadId && cs.OldProcessId == sw.NewProcessId)
+                var lastSwitchOut = this.LookupSwitchByThread[sw.NewThreadId]
+                    .Where(cs => cs.OldProcessId == sw.NewProcessId)
                     .Where(cs => cs.TimeStamp100ns >= fileTime && cs.TimeStamp100ns < sw.TimeStamp100ns)
                     .LastOrDefault();
 
                 // We didn't find it in our interval, find the absolute last
                 if(lastSwitchOut == null)
                 {
-                    lastSwitchOut = this.Switches
-                        .Where(cs => cs.OldThreadId == sw.NewThreadId && cs.OldProcessId == sw.NewProcessId)
+                    lastSwitchOut = this.LookupSwitchByThread[sw.NewThreadId]
+                        .Where(cs => cs.OldProcessId == sw.NewProcessId)
                         .Where(cs => cs.TimeStamp100ns < sw.TimeStamp100ns)
                         .LastOrDefault();
                 }
@@ -245,7 +296,7 @@ namespace Harvester.Analysis
             // If there was no switches during this period of time, take the last running
             if (frame.Total == 0)
             {
-                var sw = this.LastSwitch[core];
+                var sw = this.LookupLastSwitch[core];
                 var thread = EventThread.FromTrace(sw.NewThreadId, sw.NewProcessId, this.Process);
 
                 // Add to our frame
@@ -352,9 +403,13 @@ namespace Harvester.Analysis
         public EventOutput Analyze(string processName, ushort interval)
         {
             // First we need to gather frames
-            this.Frames = this.GetFrames(processName, interval);
+            if (this.Frames == null)
+            {
+                Console.WriteLine("Analysis: Preprocessing...");
+                this.Frames = this.GetFrames(processName, interval);
+            }
 
-            Console.WriteLine("Analysis: Performing further analysis...");
+            Console.WriteLine("Analysis: Performing analysis...");
             return this.OnAnalyze();
         }
         #endregion

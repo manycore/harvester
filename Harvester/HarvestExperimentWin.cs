@@ -28,9 +28,10 @@ namespace Harvester
         /// Prepares the files in the experiment directory.
         /// </summary>
         /// <param name="processName">The process to analyze.</param>
+        /// <param name="name">The friendly name to use.</param>
         /// <param name="os">The operating system data collector.</param>
         /// <param name="pcm">The hardware counters data collector.</param>
-        public override void Merge(string processName, HarvestProcess pcm, HarvestProcess os)
+        public override void Merge(string processName, string name, HarvestProcess pcm, HarvestProcess os)
         {
             // Files
             var pcmCsv = Path.Combine(this.WorkingDir.FullName, "raw-pcm.csv");
@@ -92,15 +93,22 @@ namespace Harvester
             var counters = TraceCounter.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
                 .ToArray();
 
-            // Create a new experiment
-            var analyzers = new Analyzer[]{
-                new Analyzer(new DataLocalityProcessor(traceLog, counters), DataLocalityExporter.Default),
-                new Analyzer(new StateProcessor(traceLog, counters), new JsonExporter() { Name = "states" }),
-                new Analyzer(new SwitchProcessor(traceLog, counters), new JsonExporter() { Name = "switches" })
-            };
-
             // 50 ms window
             const int window = 50;
+
+            // Use a preprocessor to speed things up
+            var preprocessor = new PreProcessor(traceLog, counters);
+            preprocessor.Analyze(processName, window);
+
+            // Create a new experiment
+            var analyzers = new Analyzer[]{
+                new Analyzer(new DataLocalityProcessor(preprocessor), DataLocalityExporter.Default),
+                new Analyzer(new StateProcessor(preprocessor), new JsonExporter() { Name = "states" }),
+                new Analyzer(new SwitchProcessor(preprocessor), new JsonExporter() { Name = "switches" }),
+                new Analyzer(new LockProcessor(preprocessor), new JsonExporter() { Name = "locks" }),
+            };
+
+            // Now run every analyzer
             foreach (var analyzer in analyzers)
             {
                 var processor = analyzer.Key;
@@ -114,11 +122,11 @@ namespace Harvester
                 output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
                 // Export
-                var name = exporter.Name == null 
-                    ? processName.ToLower() 
-                    : String.Format("{0}.{1}", processName.ToLower(), exporter.Name);
+                var fname = exporter.Name == null 
+                    ? name.ToLower()
+                    : String.Format("{0}.{1}", name.ToLower(), exporter.Name);
 
-                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, name + "." + exporter.Extension));
+                exporter.ExportToFile(output, Path.Combine(this.WorkingDir.FullName, fname + "." + exporter.Extension));
             }
 
         }
