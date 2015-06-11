@@ -197,6 +197,7 @@ namespace Harvester.Analysis
             }
 
             // Upsample at the specified interval
+            var elapsed = 0d;
             for (int i = 0; i < this.Count; ++i)
             {
                 // Current time
@@ -209,8 +210,17 @@ namespace Harvester.Analysis
                 // For each core
                 for (int core = 0; core < this.CoreCount; ++core)
                 {
+                    // Print out status
+                    var begin = DateTime.Now;
+                    var fid = (i * this.CoreCount + core + 1);
+                    var fmx = (this.Count * this.CoreCount);
+                    var eta = (elapsed / fid ) * (fmx - fid);
+                    Console.WriteLine("[{0}] Progress: {1}/{2} ETA: {3}",
+                        this.Process.Name,
+                        fid, fmx, 
+                        TimeSpan.FromMilliseconds(eta).ToString());
+
                     // Get corresponding context switches that happened on that particular core in the specified time frame
-                    Console.WriteLine("Progress: " + (i * this.CoreCount + core + 1) + "/" +  (this.Count * this.CoreCount));
                     var cs = this.Switches
                         .Where(e => e.TimeStamp >= timeFrom && e.TimeStamp <= timeTo)
                         .Where(e => e.ProcessorNumber == core)
@@ -221,6 +231,9 @@ namespace Harvester.Analysis
                     var frame = GetFrame(timeFrom, core, cs);
                     //Console.WriteLine(frame.ToTable());
                     result.Add(frame);
+
+                    // Calculate time spent analysing this frame
+                    elapsed += (DateTime.Now - begin).TotalMilliseconds;
                 }
             }
 
