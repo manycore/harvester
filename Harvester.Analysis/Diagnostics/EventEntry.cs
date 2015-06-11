@@ -40,6 +40,12 @@ namespace Harvester.Analysis
         public long Time;
 
         /// <summary>
+        /// The delta time of the event.
+        /// </summary>
+        [JsonProperty("dtime")]
+        public int DeltaTime;
+
+        /// <summary>
         /// The measured value of the event.
         /// </summary>
         [JsonProperty("value")]

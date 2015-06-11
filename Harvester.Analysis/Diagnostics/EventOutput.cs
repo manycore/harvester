@@ -18,9 +18,10 @@ namespace Harvester.Analysis
         /// Constructs a new output.
         /// </summary>
         /// <param name="processName">The name of the process analyzed.</param>
-        public EventOutput(string processName)
+        public EventOutput(string processName, DateTime start)
         {
             this.ProcessName = processName;
+            this.Start = start;
         }
 
         #region Public Properties
@@ -28,6 +29,15 @@ namespace Harvester.Analysis
         /// Gets or sets the name of the process analyzed.
         /// </summary>
         public string ProcessName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the start date.
+        /// </summary>
+        public DateTime Start
         {
             get;
             set;
@@ -55,6 +65,7 @@ namespace Harvester.Analysis
                 Program = program,
                 User = user,
                 Time = time,
+                DeltaTime = (int)(time - this.Start.Ticks),
                 Value = value,
                 Tid = tid,
                 Pid = pid,

@@ -26,7 +26,7 @@ namespace Harvester.Analysis
         protected override EventOutput OnAnalyze()
         {
             // Here we will store our results
-            var output  = new EventOutput(this.Process.Name);
+            var output  = new EventOutput(this.Process.Name, this.Start);
             
             // Process every frame
             foreach(var frame in this.Frames)
