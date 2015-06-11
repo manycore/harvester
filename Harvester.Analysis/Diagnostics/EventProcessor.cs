@@ -67,7 +67,7 @@ namespace Harvester.Analysis
             this.TraceLog = preprocessor.TraceLog;
             this.Counters = preprocessor.Counters;
             this.Start = preprocessor.Start;
-            this.End = preprocessor.Start;
+            this.End = preprocessor.End;
             this.Duration = preprocessor.Duration;
             this.Interval = preprocessor.Interval;
             this.Count = preprocessor.Count;
@@ -210,6 +210,7 @@ namespace Harvester.Analysis
                 for (int core = 0; core < this.CoreCount; ++core)
                 {
                     // Get corresponding context switches that happened on that particular core in the specified time frame
+                    Console.WriteLine("Progress: " + (i * this.CoreCount + core + 1) + "/" +  (this.Count * this.CoreCount));
                     var cs = this.Switches
                         .Where(e => e.TimeStamp >= timeFrom && e.TimeStamp <= timeTo)
                         .Where(e => e.ProcessorNumber == core)
@@ -218,7 +219,7 @@ namespace Harvester.Analysis
 
                     // Get an individual frame
                     var frame = GetFrame(timeFrom, core, cs);
-                    Console.WriteLine(frame.ToTable());
+                    //Console.WriteLine(frame.ToTable());
                     result.Add(frame);
                 }
             }
