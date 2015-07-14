@@ -78,7 +78,7 @@ namespace Harvester.Analysis
         /// </summary>
         public static readonly EventThread Idle = new EventThread()
         {
-            Tid = 0,
+            Tid = 1,
             Pid = 1,
             Uid = 0,
             User = "root",
