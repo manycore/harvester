@@ -32,8 +32,9 @@ namespace Harvester.Analysis
             this.Duration = duration;
             this.Core = core;
 
-            // We always add a default thread
+            // We always add a default thread and the idle thread
             this.Map.Add(EventThread.System, new double[8]);
+            this.Map.Add(EventThread.Idle, new double[8]);
         }
 
         /// <summary>
