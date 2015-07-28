@@ -74,6 +74,19 @@ namespace Harvester.Analysis
         };
 
         /// <summary>
+        /// Gets the 'Idle' thread.
+        /// </summary>
+        public static readonly EventThread Idle = new EventThread()
+        {
+            Tid = 1,
+            Pid = 1,
+            Uid = 0,
+            User = "root",
+            Process = "Idle"
+        };
+
+
+        /// <summary>
         /// Gets the custom thread.
         /// </summary>
         public static readonly EventThread Custom = new EventThread()
@@ -94,6 +107,10 @@ namespace Harvester.Analysis
         /// <returns></returns>
         public static EventThread FromTrace(TraceThread thread, TraceProcess monitoredProcess)
         {
+            // PID 0 is the Idle thread
+            if (thread.Process.ProcessID == 0)
+                return EventThread.Idle;
+
             // Everything non-related we put to default
             if(thread.Process.ProcessID != monitoredProcess.ProcessID)
                 return EventThread.System;
@@ -116,6 +133,10 @@ namespace Harvester.Analysis
         /// <returns></returns>
         public static EventThread FromTrace(int tid, int pid, TraceProcess monitoredProcess)
         {
+            // PID 0 is the Idle thread
+            if (pid == 0)
+                return EventThread.Idle;
+
             // Everything non-related we put to default
             if (pid != monitoredProcess.ProcessID)
                 return EventThread.System;
