@@ -14,9 +14,9 @@ namespace Harvester.Analysis
         public LockAcquisition(TraceEvent ev, LockAcquisitionType type)
         {
             // Old thread id & process id
-            this.Lock0 = (long)ev.PayloadValue(0);
-            this.Lock1 = (long)ev.PayloadValue(1);
-            this.Type = type;
+            this.Lock = (long)ev.PayloadValue(0);
+            this.Flag = (long)ev.PayloadValue(1);
+            this.Type = this.Flag == -1 ? LockAcquisitionType.Release : type;
             this.ThreadId = ev.ThreadID;
             this.ProcessId = ev.ProcessID;
             this.ProcessorNumber = ev.ProcessorNumber;
@@ -24,8 +24,8 @@ namespace Harvester.Analysis
             this.TimeStamp100ns = ev.TimeStamp100ns;
         }
 
-        public readonly long Lock0;
-        public readonly long Lock1;
+        public readonly long Lock;
+        public readonly long Flag;
         public readonly LockAcquisitionType Type;
 
         public readonly int ThreadId;
@@ -36,14 +36,15 @@ namespace Harvester.Analysis
 
         public override string ToString()
         {
-            return String.Format("{0} ns; thread {1}; locks {2}, {3}; type {4}",  TimeStamp100ns, ThreadId, Lock0, Lock1, Type);
+            return String.Format("{0} ns; thread {1}; locks {2}, {3}; type {4}",  TimeStamp100ns, ThreadId, Lock, Flag, Type);
         }
     }
 
     public enum LockAcquisitionType
     {
         Success,
-        Failure
+        Failure,
+        Release
     }
 
 }
