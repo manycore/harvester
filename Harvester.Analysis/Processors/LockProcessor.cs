@@ -31,13 +31,9 @@ namespace Harvester.Analysis
             // Export every event
             foreach (var ev in this.LockAcquisitions)
             {
-                if (!locks.ContainsKey(ev.Lock0))
-                    locks[ev.Lock0] = ++locki;
-                if (!locks.ContainsKey(ev.Lock1))
-                    locks[ev.Lock1] = ++locki;
-
-                output.Add(ev.Type.ToString().ToLowerInvariant(), this.Process.Name, "", ev.TimeStamp, locks[ev.Lock0], ev.ThreadId, ev.ProcessId, ev.ProcessorNumber, 0);
-                output.Add(ev.Type.ToString().ToLowerInvariant(), this.Process.Name, "", ev.TimeStamp, locks[ev.Lock1], ev.ThreadId, ev.ProcessId, ev.ProcessorNumber, 0);
+                if (!locks.ContainsKey(ev.Lock))
+                    locks[ev.Lock] = ++locki;
+                output.Add(ev.Type.ToString().ToLowerInvariant(), this.Process.Name, "", ev.TimeStamp, locks[ev.Lock], ev.ThreadId, ev.ProcessId, ev.ProcessorNumber, 0);
             }
 
             // Return the results
