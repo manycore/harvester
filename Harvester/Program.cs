@@ -50,6 +50,7 @@ namespace Harvester
                     () => Analyze("Matmul", "pc100x100", "data/PC100x100"),
                     () => Analyze("Matmul", "phasea", "data/PhaseA"),
                     () => Analyze("Matmul", "phaseb", "data/PhaseB"),
+                    () => Analyze("Matmul", "philosophers5", "data/Philosophers5"),
                     () => Analyze("Matmul", "philosophers45", "data/Philosophers45"),
                     () => Analyze("RayTracer", "raytracer", "data/RayTracer"),
                     () => Analyze("Server", "spike", "data/Spike"),
