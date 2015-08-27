@@ -332,9 +332,11 @@ void print_harvester(PCM * m, bool tlbMode, uint64 duration,
 		}
 	}
 	
-
+	cout << ';' << getBytesReadFromMC(sstate1, sstate2) <<
+			';' << getBytesWrittenToMC(sstate1, sstate2) <<
+			';' << getAllIncomingQPILinkBytes (sstate1, sstate2) <<
+			';' << getAllOutgoingQPILinkBytes(sstate1, sstate2);
 }
-
 
 void print_test(PCM * m,
 	const std::vector<CoreCounterState> & cstates1,
