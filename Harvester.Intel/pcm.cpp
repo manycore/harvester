@@ -259,6 +259,8 @@ void print_csv(PCM * m,
 				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
 				';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
 				';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL2CoherencyMisses(cstates1[i], cstates2[i]) <<
+				';' << getL1CoherencyMisses(cstates1[i], cstates2[i]) <<
 				';';
 			else
 				cout << getExecUsage(cstates1[i], cstates2[i]) <<
@@ -531,7 +533,7 @@ int main(int argc, char * argv[])
 	uint64 TimeAfterSleep = 0;
 
 	// TLB
-	PCM::CustomCoreEventDescription descr[4];
+	PCM::CustomCoreEventDescription descr[6];
 	//descr[0].event_number = DTLB_MISSES_STLB_HIT_EVTNR;
 	//descr[0].umask_value = DTLB_MISSES_STLB_HIT_UMASK;
 	descr[0].event_number = DTLB_LOAD_MISSES_WALK_COMPLETE_EVTNR;
@@ -542,6 +544,10 @@ int main(int argc, char * argv[])
 	descr[2].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
 	descr[3].event_number = MEM_STORE_RETIRED_DTLB_MISS_EVTNR;
 	descr[3].umask_value = MEM_STORE_RETIRED_DTLB_MISS_UMASK;
+	descr[4].event_number = L2_CACHE_LINE_INVALIDATION_EVTNR;
+	descr[4].umask_value = L2_CACHE_LINE_INVALIDATION_UMASK;
+	descr[5].event_number = L1_CACHE_LINE_INVALIDATION_EVTNR;
+	descr[5].umask_value = L1_CACHE_LINE_INVALIDATION_UMASK;
 
 
 	bool tlbMode = false;

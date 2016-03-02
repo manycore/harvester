@@ -1420,6 +1420,38 @@ double getCyclesLostDueL2CacheMisses(const CounterStateType & before, const Coun
     return -1;
 }
 
+/*! \brief Extract L2 cache tag match line invalid events
+
+\param before CPU counter state before the experiment
+\param after CPU counter state after the experiment
+\warning Works only in the DEFAULT_EVENTS programming mode (see program() method)
+\warning Currently not supported on Intel(R) Atom(tm) processor
+\return ratio that is usually beetween 0 and 1 ; in some cases could be >1.0 due to a lower access latency estimation
+*/
+template <class CounterStateType>
+uint64 getL2CoherencyMisses(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
+	return getNumberOfCustomEvents(4, before, after);
+}
+
+
+/*! \brief Extract L1 cache tag match line invalid events
+
+\param before CPU counter state before the experiment
+\param after CPU counter state after the experiment
+\warning Works only in the DEFAULT_EVENTS programming mode (see program() method)
+\warning Currently not supported on Intel(R) Atom(tm) processor
+\return ratio that is usually beetween 0 and 1 ; in some cases could be >1.0 due to a lower access latency estimation
+*/
+template <class CounterStateType>
+uint64 getL1CoherencyMisses(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
+	return getNumberOfCustomEvents(5, before, after);
+}
+
+
 /*! \brief Computes L2 cache hit ratio
 
     \param before CPU counter state before the experiment

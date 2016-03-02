@@ -97,6 +97,12 @@ typedef signed int int32;
 #define DTLB_LOAD_MISSES_WALK_COMPLETE_EVTNR   (0x8)
 #define DTLB_LOAD_MISSES_WALK_COMPLETE_UMASK   (0x2)
 
+// Cache line invalidation counters
+#define L2_CACHE_LINE_INVALIDATION_EVTNR (0x24)
+#define L2_CACHE_LINE_INVALIDATION_UMASK (0x1)
+
+#define L1_CACHE_LINE_INVALIDATION_EVTNR (0x40)
+#define L1_CACHE_LINE_INVALIDATION_UMASK (0x1)
 
 // Sandy Bridge on-core events
 
