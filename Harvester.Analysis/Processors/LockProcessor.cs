@@ -22,7 +22,7 @@ namespace Harvester.Analysis
         protected override EventOutput OnAnalyze()
         {
             // Here we will store our results
-            var output = new EventOutput(this.Process.Name);
+            var output = new EventOutput(this.Process.Name, this.Start);
 
             // This is for mapping pointers to a lock number
             var locks = new Dictionary<long, int>();
