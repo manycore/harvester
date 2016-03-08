@@ -65,6 +65,21 @@ namespace Harvester.Analysis
         /// Gets or sets the TLB clock impact.
         /// </summary>
         public double TLBClock;
+
+        /// <summary>
+        /// Gets or sets the number of L1 cache invalidations
+        /// </summary>
+        public double L1Invalidations;
+
+        /// <summary>
+        /// Gets or sets the number of L2 cache invalidations
+        /// </summary>
+        public double L2Invalidations;
+
+        /// <summary>
+        /// Gets or sets the DRAM Bandwidth in bytes
+        /// </summary>
+        public double DRAMBandwidth;
     }
 
 

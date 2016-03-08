@@ -210,6 +210,7 @@ void print_csv(PCM * m,
 				';' << getL2CacheHits(sstate1, sstate2) <<
 				';' << getCyclesLostDueL3CacheMisses(sstate1, sstate2) <<
 				';' << getCyclesLostDueL2CacheMisses(sstate1, sstate2) <<
+				';' << getRetiredLoadInstructionsToDRAM(sstate1, sstate2) <<
 				';';
 
 
@@ -324,13 +325,18 @@ void print_harvester(PCM * m, bool tlbMode, uint64 duration,
 		{
 			// Default events we need to get per core
 			cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
-					';' << getCycles(cstates1[i], cstates2[i]) <<
-					';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
-					';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
-					';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
-					';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
-					';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
-					';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) ;
+				';' << getCycles(cstates1[i], cstates2[i]) <<
+				';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
+				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
+				';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) <<
+				';' << getL2CoherencyMisses(cstates1[i], cstates2[i]) <<
+				';' << getL1CoherencyMisses(cstates1[i], cstates2[i]) <<
+				';' << getDRAMBandwidthInBytes(cstates1[i], cstates2[i]) 
+				//<< ';' // For debug; printing an extra semicolon to mark end of data associated to one core; will break harvester reading stuff
+				;
 		}
 	}
 	
@@ -533,7 +539,7 @@ int main(int argc, char * argv[])
 	uint64 TimeAfterSleep = 0;
 
 	// TLB
-	PCM::CustomCoreEventDescription descr[6];
+	PCM::CustomCoreEventDescription descr[8];
 	//descr[0].event_number = DTLB_MISSES_STLB_HIT_EVTNR;
 	//descr[0].umask_value = DTLB_MISSES_STLB_HIT_UMASK;
 	descr[0].event_number = DTLB_LOAD_MISSES_WALK_COMPLETE_EVTNR;
@@ -544,10 +550,20 @@ int main(int argc, char * argv[])
 	descr[2].umask_value = MEM_LOAD_RETIRED_DTLB_MISS_UMASK;
 	descr[3].event_number = MEM_STORE_RETIRED_DTLB_MISS_EVTNR;
 	descr[3].umask_value = MEM_STORE_RETIRED_DTLB_MISS_UMASK;
+
+	// Addons from AA
 	descr[4].event_number = L2_CACHE_LINE_INVALIDATION_EVTNR;
 	descr[4].umask_value = L2_CACHE_LINE_INVALIDATION_UMASK;
+	descr[7].event_number = L1D_PREFETCH_REQUESTS_EVTNR;
+	descr[7].umask_value = L1D_PREFETCH_REQUESTS_UMASK;
+
 	descr[5].event_number = L1_CACHE_LINE_INVALIDATION_EVTNR;
 	descr[5].umask_value = L1_CACHE_LINE_INVALIDATION_UMASK;
+	descr[6].event_number = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_EVTNR;
+	descr[6].umask_value = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_UMASK;
+
+	//descr[8].event_number = L2_CACHE_MISSES_VERIFICATION_EVTNR;
+	//descr[8].umask_value = L2_CACHE_MISSES_VERIFICATION_UMASK;
 
 
 	bool tlbMode = false;

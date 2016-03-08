@@ -61,11 +61,19 @@ namespace Harvester
 
             // Open it now
             var traceLog = TraceLog.OpenOrConvert(etlxFile);
-
+            
             // Get the proces to monitor
             var process = traceLog.Processes
              .Where(p => p.Name.StartsWith(processName))
+             //.FirstOrDefault();
              .FirstOrDefault();
+
+            if (!process.Name.StartsWith(processName))
+            {
+                Console.WriteLine("Start the benchmark!");
+                System.Environment.Exit(-1);
+            }
+
 
             var hwe = traceLog.Events
                 .Where(e => e.ProcessID == process.ProcessID)
@@ -90,8 +98,19 @@ namespace Harvester
                 .ToArray();
 
             // Get all hardware counters
-            var counters = TraceCounter.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
-                .ToArray();
+            //Console.WriteLine("tutu1");
+            //Console.Out.Flush();
+            var counters = new TraceCounter[0];
+            if (File.Exists(pcmCsv))
+            {
+                Console.WriteLine("File " + pcmCsv + " exists!");
+                Console.Out.Flush();
+                counters = TraceCounter.FromFile(pcmCsv, process.StartTime.Year, process.StartTime.Month, process.StartTime.Day)
+                    .ToArray();
+            } else
+            {
+                Console.WriteLine("File " + pcmCsv + " does not exist!!!!!!!");
+            }
 
             // 50 ms window
             const int window = 50;
@@ -102,6 +121,8 @@ namespace Harvester
 
             // Create a new experiment
             var analyzers = new Analyzer[]{
+                new Analyzer(new MemoryProcessor(preprocessor), new JsonExporter() { Name = "memory" }),
+                new Analyzer(new CoherencyProcessor(preprocessor), new JsonExporter() { Name = "coherency" }),
                 new Analyzer(new DataLocalityProcessor(preprocessor), DataLocalityExporter.Default),
                 new Analyzer(new StateProcessor(preprocessor), new JsonExporter() { Name = "states" }),
                 new Analyzer(new SwitchProcessor(preprocessor), new JsonExporter() { Name = "switches" }),

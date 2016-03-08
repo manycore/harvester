@@ -398,6 +398,10 @@ namespace Harvester.Analysis
             counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.TLBClock = hardware.Where(c => c.Type == TraceCounterType.TLBClock).Select(c => c.Value).Average();
 
+            counters.L1Invalidations = hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Average();
+            counters.L2Invalidations = hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Average();
+            counters.DRAMBandwidth = hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Average();
+
             return counters;
         }
         #endregion

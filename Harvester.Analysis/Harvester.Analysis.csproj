@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Processors\MemoryProcessor.cs" />
+    <Compile Include="Processors\CoherencyProcessor.cs" />
     <Compile Include="Diagnostics\EventHwCounters.cs" />
     <Compile Include="Diagnostics\EventEntry.cs" />
     <Compile Include="Diagnostics\EventExporter.cs" />

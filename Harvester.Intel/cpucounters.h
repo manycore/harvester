@@ -1432,9 +1432,29 @@ template <class CounterStateType>
 uint64 getL2CoherencyMisses(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
 {
 	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
-	return getNumberOfCustomEvents(4, before, after);
+	
+	// 4 - gets the total number of L2 data requests to invalid cache lines; but this includes L1 h/w prefetches
+	// 7 - gets total L1 h/w prefetches; diff gives total number of misses from L2 because of cache coherency
+	return (getNumberOfCustomEvents(4, before, after) - getNumberOfCustomEvents(7, before, after));
 }
 
+///*! \brief Test function that gets L2 cache misses using the custom event method; for verification against real getL2CacheMisses
+//
+//\param before CPU counter state before the experiment
+//\param after CPU counter state after the experiment
+//\warning Works only in the DEFAULT_EVENTS programming mode (see program() method)
+//\warning Currently not supported on Intel(R) Atom(tm) processor
+//\return number of L2 cache misses
+//*/
+//template <class CounterStateType>
+//uint64 getL2CacheMisses_verification(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
+//{
+//	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
+//
+//	// 4 - gets the total number of L2 data requests to invalid cache lines; but this includes L1 h/w prefetches
+//	// 7 - gets total L1 h/w prefetches; diff gives total number of misses from L2 because of cache coherency
+//	return getNumberOfCustomEvents(8, before, after);
+//}
 
 /*! \brief Extract L1 cache tag match line invalid events
 
@@ -1451,6 +1471,36 @@ uint64 getL1CoherencyMisses(const CounterStateType & before, const CounterStateT
 	return getNumberOfCustomEvents(5, before, after);
 }
 
+/*! \brief Extract L1 cache tag match line invalid events
+
+\param before CPU counter state before the experiment
+\param after CPU counter state after the experiment
+\warning Works only in the DEFAULT_EVENTS programming mode (see program() method)
+\warning Currently not supported on Intel(R) Atom(tm) processor
+\return ratio that is usually beetween 0 and 1 ; in some cases could be >1.0 due to a lower access latency estimation
+*/
+template <class CounterStateType>
+uint64 getDRAMBandwidthInBytes(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
+	return getNumberOfCustomEvents(6, before, after)*16;
+}
+
+
+/*! \brief Count number of retired load instructions that access the DRAM (L1, L2 & L3 caches missed)
+
+\param before CPU counter state before the experiment
+\param after CPU counter state after the experiment
+\warning Works only in the DEFAULT_EVENTS programming mode (see program() method)
+\warning Currently not supported on Intel(R) Atom(tm) processor
+\return ratio that is usually beetween 0 and 1 ; in some cases could be >1.0 due to a lower access latency estimation
+*/
+template <class CounterStateType>
+uint64 getRetiredLoadInstructionsToDRAM(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
+{
+	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
+	return getNumberOfCustomEvents(6, before, after);
+}
 
 /*! \brief Computes L2 cache hit ratio
 
@@ -1581,6 +1631,8 @@ uint64 getL2CacheMisses(const CounterStateType & before, const CounterStateType 
     uint64 L3Miss = after.L3Miss - before.L3Miss;
     uint64 L3UnsharedHit = after.L3UnsharedHit - before.L3UnsharedHit;
     uint64 L2HitM = after.L2HitM - before.L2HitM;
+
+	// Why is L3Miss being added to L2 misses?
     return L2HitM + L3UnsharedHit + L3Miss;
 }
 
