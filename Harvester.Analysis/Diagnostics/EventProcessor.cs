@@ -235,6 +235,7 @@ namespace Harvester.Analysis
                     // Calculate time spent analysing this frame
                     elapsed += (DateTime.Now - begin).TotalMilliseconds;
                 }
+
             }
 
             // Return the resulting frames
@@ -388,7 +389,6 @@ namespace Harvester.Analysis
             // Computed
             counters.L1Misses = counters.L2Misses + counters.L2Hits;
 
-
             // The duration of the TLB events
             duration = hardware
                 .Where(c => c.Type == TraceCounterType.TLBMiss)
@@ -398,9 +398,13 @@ namespace Harvester.Analysis
             counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.TLBClock = hardware.Where(c => c.Type == TraceCounterType.TLBClock).Select(c => c.Value).Average();
 
-            counters.L1Invalidations = hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Average();
-            counters.L2Invalidations = hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Average();
-            counters.DRAMBandwidth = hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Average();
+            // counters.L1Invalidations = hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Average();
+            // counters.L2Invalidations = hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Average();
+            // counters.DRAMBandwidth = hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Average();
+
+            counters.L1Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.L2Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            counters.DRAMBandwidth = (long)((hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
 
             return counters;
         }

@@ -111,9 +111,9 @@ typedef signed int int32;
 #define REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_EVTNR (0x0F)
 #define REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_UMASK (0x10)
 
-//// L2 cache misses for verification of getCustomEvents
-//#define L2_CACHE_MISSES_VERIFICATION_EVTNR ()
-//#define L2_CACHE_MISSES_VERIFICATION_UMASK ()
+// L2 cache misses for verification of getCustomEvents
+#define MEMORY_LOAD_SIBLING_CORE_EVTNR (0x0F)
+#define MEMORY_LOAD_SIBLING_CORE_UMASK (0x02)
 
 // Sandy Bridge on-core events
 

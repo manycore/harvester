@@ -1435,7 +1435,7 @@ uint64 getL2CoherencyMisses(const CounterStateType & before, const CounterStateT
 	
 	// 4 - gets the total number of L2 data requests to invalid cache lines; but this includes L1 h/w prefetches
 	// 7 - gets total L1 h/w prefetches; diff gives total number of misses from L2 because of cache coherency
-	return (getNumberOfCustomEvents(4, before, after) - getNumberOfCustomEvents(7, before, after));
+	return (getNumberOfCustomEvents(4, before, after) - getNumberOfCustomEvents(8, before, after));
 }
 
 ///*! \brief Test function that gets L2 cache misses using the custom event method; for verification against real getL2CacheMisses

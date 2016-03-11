@@ -116,8 +116,15 @@ namespace Diagnostics.Tracing
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L2Invalidation, l2invalidation);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L1Invalidation, l1invalidation);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.DramBW, drambw);
+                            
                         }
 
+                        /*
+                        for (int recOffset = -4; recOffset < 0; recOffset++)
+                        {
+                            var line[line.Length + recOffset];
+                        }
+                        */
                     }
 
                     // Events that represent TLB
