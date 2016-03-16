@@ -80,6 +80,26 @@ namespace Harvester.Analysis
         /// Gets or sets the DRAM Bandwidth in bytes
         /// </summary>
         public double DRAMBandwidth;
+
+        /// <summary>
+        /// Gets or sets the number of bytes read from the memory controller by the system
+        /// </summary>
+        public double BytesReadFromMC;
+
+        /// <summary>
+        /// Gets or sets the number of bytes written to the memory controller by the system
+        /// </summary>
+        public double BytesWrittenToMC;
+
+        /// <summary>
+        /// Gets or sets the Incoming QPI
+        /// </summary>
+        public double IncomingQPI;
+
+        /// <summary>
+        /// Gets or sets the Outgoing QPI
+        /// </summary>
+        public double OutgoingQPI;
     }
 
 

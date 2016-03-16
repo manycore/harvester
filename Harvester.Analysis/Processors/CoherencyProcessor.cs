@@ -41,6 +41,9 @@ namespace Harvester.Analysis
 
                     output.Add("l1Invalidations", frame, thread, Math.Round(multiplier * cn.L1Invalidations));
                     output.Add("l2Invalidations", frame, thread, Math.Round(multiplier * cn.L2Invalidations));
+
+                    output.Add("l1miss", frame, thread, Math.Round(multiplier * cn.L1Misses));
+                    output.Add("l2miss", frame, thread, Math.Round(multiplier * cn.L2Misses));
                 }
             }
 

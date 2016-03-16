@@ -217,7 +217,7 @@ namespace Harvester.Analysis
                     var eta = (elapsed / fid ) * (fmx - fid);
                     Console.WriteLine("[{0}] Progress: {1}/{2} ETA: {3}",
                         this.Process.Name,
-                        fid, fmx, 
+                        fid, fmx,
                         TimeSpan.FromMilliseconds(eta).ToString());
 
                     // Get corresponding context switches that happened on that particular core in the specified time frame
@@ -247,6 +247,7 @@ namespace Harvester.Analysis
         /// </summary>
         private EventFrame GetFrame(DateTime time, int core, IEnumerable<ContextSwitch> switches)
         {
+            //Console.WriteLine("\t Get frame");
             // We got some events, calculate the proportion
             var fileTime = time.ToFileTime();
             var process  = this.Process.ProcessID;
@@ -321,13 +322,12 @@ namespace Harvester.Analysis
                 frame.IncrementOnCoreTime(thread, maxTime);
             }
 
-
             // Get corresponding hardware counters 
             frame.HwCounters = this.GetCounters(core, time, time + this.Interval);
 
             // Get the page faults within this frame
             frame.PageFaults = this.GetPageFaults(core, time, time + this.Interval);
-
+            //Console.WriteLine("\t Returning frame");
             return frame;
         }
 
@@ -398,13 +398,18 @@ namespace Harvester.Analysis
             counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.TLBClock = hardware.Where(c => c.Type == TraceCounterType.TLBClock).Select(c => c.Value).Average();
 
-            // counters.L1Invalidations = hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Average();
-            // counters.L2Invalidations = hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Average();
-            // counters.DRAMBandwidth = hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Average();
-
             counters.L1Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.L2Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.DRAMBandwidth = (long)((hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+
+
+            if (core == CoreCount - 1)
+            {
+                counters.BytesReadFromMC = (long)((hardware.Where(c => c.Type == TraceCounterType.BytesReadFromMC).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+                counters.BytesWrittenToMC = (long)((hardware.Where(c => c.Type == TraceCounterType.BytesWrittenToMC).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+                counters.IncomingQPI = (long)((hardware.Where(c => c.Type == TraceCounterType.IncomingQPI).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+                counters.OutgoingQPI = (long)((hardware.Where(c => c.Type == TraceCounterType.OutgoingQPI).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
+            }
 
             return counters;
         }

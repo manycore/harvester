@@ -140,6 +140,7 @@ namespace Harvester
 
                 // Write the output
                 output.Save(Path.Combine(this.WorkingDir.FullName, "output.csv"));
+                //output.Save(Path.Combine(this.WorkingDir.FullName, "output-" + processor.ToString() + ".csv"));
                 output.WriteByThread(Path.Combine(this.WorkingDir.FullName, "outputByThread.csv"));
 
                 // Export

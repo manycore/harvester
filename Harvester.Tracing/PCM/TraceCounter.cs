@@ -116,15 +116,20 @@ namespace Diagnostics.Tracing
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L2Invalidation, l2invalidation);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L1Invalidation, l1invalidation);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.DramBW, drambw);
-                            
-                        }
 
-                        /*
-                        for (int recOffset = -4; recOffset < 0; recOffset++)
-                        {
-                            var line[line.Length + recOffset];
+                            if (core == coreCount - 1)
+                            //if (false)
+                            {
+                                var MC_read = Double.Parse(line[i + 11], CultureInfo.InvariantCulture);
+                                var MC_write = Double.Parse(line[i + 12], CultureInfo.InvariantCulture);
+                                var QPI_incoming = Double.Parse(line[i + 13], CultureInfo.InvariantCulture);
+                                var QPI_outgoing = Double.Parse(line[i + 14], CultureInfo.InvariantCulture);
+                                yield return new TraceCounter(core, time, duration, TraceCounterType.BytesReadFromMC, MC_read);
+                                yield return new TraceCounter(core, time, duration, TraceCounterType.BytesWrittenToMC, MC_write);
+                                yield return new TraceCounter(core, time, duration, TraceCounterType.IncomingQPI, QPI_incoming);
+                                yield return new TraceCounter(core, time, duration, TraceCounterType.OutgoingQPI, QPI_outgoing);
+                            }
                         }
-                        */
                     }
 
                     // Events that represent TLB
@@ -184,8 +189,11 @@ namespace Diagnostics.Tracing
         TLBClock,
         L2Invalidation,
         L1Invalidation,
-        DramBW
+        DramBW,
+        BytesReadFromMC,
+        BytesWrittenToMC,
+        IncomingQPI,
+        OutgoingQPI,
     }
-
 }
 

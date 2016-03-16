@@ -24,16 +24,26 @@ namespace Harvester.Analysis
             // Here we will store our results
             var output = new EventOutput(this.Process.Name, this.Start);
 
+            // Get the largest core by iterating through frames and getting the largest frame.core. Use the .Where(e==>e.core) stuff!
+            //var maxCoreCount = this.Counters.Select(c => c.Core).Max();
+            var maxCoreCount = 7;
+
             // Process every frame
             foreach (var frame in this.Frames)
             {
                 // Build some shortcuts
                 var core = frame.Core;
-
+                            
                 // Get corresponding hardware counters 
                 var cn = frame.HwCounters;
 
                 output.Add("drambw", frame, EventThread.Custom, cn.DRAMBandwidth);
+
+                if( core == maxCoreCount )
+                {
+                    output.Add("MC_read", frame, EventThread.Custom, cn.BytesReadFromMC);
+                    output.Add("MC_write", frame, EventThread.Custom, cn.BytesWrittenToMC);
+                }
 
                 /*var contextSwitches = this.TraceLog.Events
                     .Where(e => e.EventName == "Thread/CSwitch")
