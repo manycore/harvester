@@ -278,7 +278,7 @@ void print_csv(PCM * m,
 }
 
 
-void print_harvester(PCM * m, bool tlbMode, uint64 duration,
+void print_harvester(PCM * m, PCM::PCMLine tlbMode, uint64 duration,
 	const std::vector<CoreCounterState> & cstates1,
 	const std::vector<CoreCounterState> & cstates2,
 	const std::vector<SocketCounterState> & sktstate1,
@@ -308,38 +308,66 @@ void print_harvester(PCM * m, bool tlbMode, uint64 duration,
 		return;
 
 	cout << "\n" << tt->tm_hour << ':' << tt->tm_min << ':' << tt->tm_sec << ':' << milli << ';' << duration << ';';
-	cout << (tlbMode ? "TLB" : "CACHE") ;
+	switch (tlbMode)
+	{
+		case PCM::PCMLine::TLB_LINE:
+			cout << "TLB";
+			break;
+		case PCM::PCMLine::CACHE_LINE:
+			cout << "CACHE";
+			break;
+		case PCM::PCMLine::COHERENCY_MEMORY_LINE:
+			cout << "COHERENCY_MEMORY";
+			break;
+		default:
+			cout << "\nUnknown PCMLine enums";
+			exit(1);
+	}
 
 	// For each core we have
 	for (uint32 i = 0; i < m->getNumCores(); ++i)
 	{
-		if (tlbMode)
+		switch (tlbMode)
 		{
-			// Get our TLB misses
-			cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
+			case PCM::PCMLine::TLB_LINE:
+			{
+				// Get our TLB misses
+				cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
 					';' << getCycles(cstates1[i], cstates2[i]) <<
 					';' << getEvent0(cstates1[i], cstates2[i]) <<
 					';' << getCyclesLostDueTLBMisses(cstates1[i], cstates2[i]);
-		}
-		else
-		{
-			// Default events we need to get per core
-			cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
-				';' << getCycles(cstates1[i], cstates2[i]) <<
-				';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
-				';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
-				';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]) <<
-				';' << getL2CoherencyMisses(cstates1[i], cstates2[i]) <<
-				';' << getL1CoherencyMisses(cstates1[i], cstates2[i]) <<
-				';' << getDRAMBandwidthInBytes(cstates1[i], cstates2[i]) 
-				//<< ';' // For debug; printing an extra semicolon to mark end of data associated to one core; will break harvester reading stuff
-				;
+				break;
+			}
+			case PCM::PCMLine::CACHE_LINE:
+			{
+				// Default events we need to get per core
+				cout << ';' << getIPC(cstates1[i], cstates2[i]) <<
+					';' << getCycles(cstates1[i], cstates2[i]) <<
+					';' << getL3CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getL2CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getL3CacheHits(cstates1[i], cstates2[i]) <<
+					';' << getL2CacheHits(cstates1[i], cstates2[i]) <<
+					';' << getCyclesLostDueL3CacheMisses(cstates1[i], cstates2[i]) <<
+					';' << getCyclesLostDueL2CacheMisses(cstates1[i], cstates2[i]);
+				break;
+			}
+			case PCM::PCMLine::COHERENCY_MEMORY_LINE:
+			{
+				cout<< ';' << getL2CoherencyMisses(cstates1[i], cstates2[i]) <<
+					';' << getL1CoherencyMisses(cstates1[i], cstates2[i]) <<
+					';' << getDRAMBandwidthInBytes(cstates1[i], cstates2[i])
+					//<< ';' // For debug; printing an extra semicolon to mark end of data associated to one core; will break harvester reading stuff
+					;
+				break;
+			}
+			default:
+			{
+				cout << "\nInvalid PCMLine enum(" << tlbMode << ")";
+				exit(-1);
+			}
 		}
 	}
-	if (!tlbMode)
+	if ( tlbMode == PCM::PCMLine::CACHE_LINE )
 	{
 		cout << ';' << getBytesReadFromMC(sstate1, sstate2) <<
 			';' << getBytesWrittenToMC(sstate1, sstate2) <<
@@ -544,7 +572,8 @@ int main(int argc, char * argv[])
 	uint64 TimeAfterSleep = 0;
 
 	// TLB
-	PCM::CustomCoreEventDescription descr[9];
+	PCM::CustomCoreEventDescription descr[4];
+	PCM::CustomCoreEventDescription newDescr[3];
 	//descr[0].event_number = DTLB_MISSES_STLB_HIT_EVTNR;
 	//descr[0].umask_value = DTLB_MISSES_STLB_HIT_UMASK;
 	descr[0].event_number = DTLB_LOAD_MISSES_WALK_COMPLETE_EVTNR;
@@ -557,39 +586,39 @@ int main(int argc, char * argv[])
 	descr[3].umask_value = MEM_STORE_RETIRED_DTLB_MISS_UMASK;
 
 	// Addons from AA
-	descr[4].event_number = L2_CACHE_LINE_INVALIDATION_EVTNR;
-	descr[4].umask_value = L2_CACHE_LINE_INVALIDATION_UMASK;
-	descr[7].event_number = L1D_PREFETCH_REQUESTS_EVTNR;
-	descr[7].umask_value = L1D_PREFETCH_REQUESTS_UMASK;
+	newDescr[0].event_number = L2_CACHE_LINE_INVALIDATION_EVTNR;
+	newDescr[0].umask_value = L2_CACHE_LINE_INVALIDATION_UMASK;
+	newDescr[1].event_number = L1_CACHE_LINE_INVALIDATION_EVTNR;
+	newDescr[1].umask_value = L1_CACHE_LINE_INVALIDATION_UMASK;
+	newDescr[2].event_number = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_EVTNR;
+	newDescr[2].umask_value = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_UMASK;
 
-	descr[5].event_number = L1_CACHE_LINE_INVALIDATION_EVTNR;
-	descr[5].umask_value = L1_CACHE_LINE_INVALIDATION_UMASK;
-	descr[6].event_number = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_EVTNR;
-	descr[6].umask_value = REMOTELY_HOMED_RETIRED_MEM_LOAD_INSTRUCTIONS_UMASK;
-
-	descr[8].event_number = MEMORY_LOAD_SIBLING_CORE_EVTNR;
-	descr[8].umask_value = MEMORY_LOAD_SIBLING_CORE_UMASK;
-
-
-	bool tlbMode = false;
+	PCM::PCMLine tlbMode = PCM::PCMLine::TLB_LINE;
 	cout << "\n";
 
 	freopen("output.csv", "w", stdout);
 	cout << "BEGIN";
 	while (1)
 	{
-	
-
 		// Fresh containers
 		std::vector<CoreCounterState> cstates1, cstates2;
 		std::vector<SocketCounterState> sktstate1, sktstate2;
 		SystemCounterState sstate1, sstate2;
 
 		// Whether we should collect tlb or default
-		PCM::ErrorCode status = tlbMode
-			? m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, &descr)
-			: m->program();
-
+		PCM::ErrorCode status;
+		if (tlbMode == PCM::PCMLine::TLB_LINE)
+			status = m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, &descr, PCM::PCMLine::TLB_LINE);
+		else if( tlbMode == PCM::PCMLine::CACHE_LINE)
+			status = m->program();
+		else if (tlbMode == PCM::PCMLine::COHERENCY_MEMORY_LINE)
+			status = m->program(PCM::ProgramMode::CUSTOM_CORE_EVENTS, &newDescr, PCM::PCMLine::COHERENCY_MEMORY_LINE);
+		else
+		{
+			cout << "\nTrying to access a PCMLine enum ("<<tlbMode<<") that I don't know about. Exiting.";
+			exit(1);
+		}
+		
 		// Get the counters (t0)
 		m->getAllCounterStates(sstate1, sktstate1, cstates1);
 		TimeBeforeSleep = m->getTickCountRDTSCP(1000000);
@@ -613,7 +642,7 @@ int main(int argc, char * argv[])
 		m->cleanup();
 
 		// Switch the mode (round-roblin)
-		tlbMode = tlbMode ? false : true;
+		tlbMode = (PCM::PCMLine)( (tlbMode+1)%(PCM::PCMLine::PCM_LINES_MAX) );
 		if (sysCmd)
 		{
 			// system() call removes PCM cleanup handler. need to do clean up explicitely

@@ -232,6 +232,13 @@ public:
         INVALID_MODE                /*!< Non-programmed mode */
     };
 
+	enum PCMLine {
+		TLB_LINE = 0,				/*!< First line that collects TLB related values */
+		CACHE_LINE = 1,				/*!< Second line that collects cache related values */
+		COHERENCY_MEMORY_LINE = 2,	/*!< Last line that collects the new values (coherency+memory) */
+		PCM_LINES_MAX = 3
+	};
+
     //! Return codes (e.g. for program(..) method)
     enum ErrorCode {
         Success = 0,
@@ -376,7 +383,7 @@ public:
         program PMUs: Intel(r) VTune(tm), Intel(r) Performance Tuning Utility (PTU). This code may make
         VTune or PTU measurements invalid. VTune or PTU measurement may make measurement with this code invalid. Please enable either usage of these routines or VTune/PTU/etc.
     */
-    ErrorCode program(ProgramMode mode_ = DEFAULT_EVENTS, void * parameter_ = NULL); // program counters and start counting
+    ErrorCode program(ProgramMode mode_ = DEFAULT_EVENTS, void * parameter_ = NULL, PCMLine lineMode_= CACHE_LINE); // program counters and start counting
 
     /*! \brief Programs uncore power/energy counters on microarchitecture codename SandyBridge-EP
         \param mc_profile profile for integrated memory controller PMU. See possible profile values in pcm-power.cpp example
@@ -1435,7 +1442,7 @@ uint64 getL2CoherencyMisses(const CounterStateType & before, const CounterStateT
 	
 	// 4 - gets the total number of L2 data requests to invalid cache lines; but this includes L1 h/w prefetches
 	// 7 - gets total L1 h/w prefetches; diff gives total number of misses from L2 because of cache coherency
-	return (getNumberOfCustomEvents(4, before, after) - getNumberOfCustomEvents(8, before, after));
+	return (getNumberOfCustomEvents(0, before, after));
 }
 
 ///*! \brief Test function that gets L2 cache misses using the custom event method; for verification against real getL2CacheMisses
@@ -1468,7 +1475,7 @@ template <class CounterStateType>
 uint64 getL1CoherencyMisses(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
 {
 	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
-	return getNumberOfCustomEvents(5, before, after);
+	return getNumberOfCustomEvents(1, before, after);
 }
 
 /*! \brief Extract L1 cache tag match line invalid events
@@ -1483,7 +1490,7 @@ template <class CounterStateType>
 uint64 getDRAMBandwidthInBytes(const CounterStateType & before, const CounterStateType & after) // 0.0 - 1.0
 {
 	if (PCM::getInstance()->getCPUModel() == PCM::ATOM) return -1;
-	return getNumberOfCustomEvents(6, before, after)*16;
+	return getNumberOfCustomEvents(2, before, after)*16;
 }
 
 

@@ -1027,7 +1027,7 @@ perf_event_attr PCM_init_perf_event_attr()
 }               
 #endif
 
-PCM::ErrorCode PCM::program(PCM::ProgramMode mode_, void * parameter_)
+PCM::ErrorCode PCM::program(PCM::ProgramMode mode_, void * parameter_, PCM::PCMLine lineMode_)
 {
     SystemWideLock lock;
     if (!MSR) return PCM::MSRAccessDenied;
@@ -1128,16 +1128,36 @@ numInst<=1 && canUsePerf==true -> we are first, perf will be used, *dont check*,
             return PCM::UnknownError;
 		}
         CustomCoreEventDescription * pDesc = (CustomCoreEventDescription *)parameter_;
-        coreEventDesc[0] = pDesc[0];
-        coreEventDesc[1] = pDesc[1];
-        if (cpu_model != ATOM)
-        {
-            coreEventDesc[2] = pDesc[2];
-            coreEventDesc[3] = pDesc[3];
-            core_gen_counter_num_used = 4;
-        }
-        else
-            core_gen_counter_num_used = 2;
+
+		if (lineMode_ == TLB_LINE)
+		{
+			coreEventDesc[0] = pDesc[0];
+			coreEventDesc[1] = pDesc[1];
+			if (cpu_model != ATOM)
+			{
+				coreEventDesc[2] = pDesc[2];
+				coreEventDesc[3] = pDesc[3];
+				core_gen_counter_num_used = 4;
+			}
+			else
+				core_gen_counter_num_used = 2;
+		}
+		else if (lineMode_ == COHERENCY_MEMORY_LINE)
+		{
+			if (cpu_model != ATOM)
+			{
+				coreEventDesc[0] = pDesc[0];
+				coreEventDesc[1] = pDesc[1];
+				coreEventDesc[2] = pDesc[2];
+				core_gen_counter_num_used = 3;
+			}
+			core_gen_counter_num_used = 0;
+		}
+		else
+		{
+			std::cout << "\nPCM Internal Error: enum for custom event doesn't exist/not accounted for in code" << std::endl;
+			return PCM::UnknownError;
+		}
     }
     else
     {
@@ -1168,20 +1188,20 @@ numInst<=1 && canUsePerf==true -> we are first, perf will be used, *dont check*,
         }
         else
         {   // Nehalem or Westmere
-	    if(
-               NEHALEM_EP == cpu_model 
-            || WESTMERE_EP == cpu_model 
-            || CLARKDALE == cpu_model
-            )
-	    {
-			coreEventDesc[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
-			coreEventDesc[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
-	    }
-	    else
-	    {
-			coreEventDesc[0].event_number = ARCH_LLC_MISS_EVTNR;
-			coreEventDesc[0].umask_value = ARCH_LLC_MISS_UMASK;
-	    }
+			if(
+				   NEHALEM_EP == cpu_model 
+				|| WESTMERE_EP == cpu_model 
+				|| CLARKDALE == cpu_model
+				)
+			{
+				coreEventDesc[0].event_number = MEM_LOAD_RETIRED_L3_MISS_EVTNR;
+				coreEventDesc[0].umask_value = MEM_LOAD_RETIRED_L3_MISS_UMASK;
+			}
+			else
+			{
+				coreEventDesc[0].event_number = ARCH_LLC_MISS_EVTNR;
+				coreEventDesc[0].umask_value = ARCH_LLC_MISS_UMASK;
+			}
             coreEventDesc[1].event_number = MEM_LOAD_RETIRED_L3_UNSHAREDHIT_EVTNR;
             coreEventDesc[1].umask_value = MEM_LOAD_RETIRED_L3_UNSHAREDHIT_UMASK;
             coreEventDesc[2].event_number = MEM_LOAD_RETIRED_L2_HITM_EVTNR;

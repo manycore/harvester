@@ -84,14 +84,14 @@ namespace Diagnostics.Tracing
                     {
                         // The lenght of the core entry
                         //var recordLength = 8;
-                        var recordLength = 11; // Increased counter to accommodate missing data items
+                        var recordLength = 8; // Increased counter to accommodate missing data items
                         var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength);
                         for (int core = 0; core < coreCount; ++core)
                         {
                             var i = offset + (core * recordLength);
 
-                            //Console.WriteLine("Parsing record for core " + core.ToString() + "...");
-                            //Console.Out.Flush();
+                            Console.WriteLine("Parsing record for core " + core.ToString() + "...");
+                            Console.Out.Flush();
                             // Get the values for the cache
                             var ipc     = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
                             var clock   = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
@@ -100,10 +100,12 @@ namespace Diagnostics.Tracing
                             var l3hit   = Double.Parse(line[i + 4], CultureInfo.InvariantCulture);
                             var l2hit   = Double.Parse(line[i + 5], CultureInfo.InvariantCulture);
                             var l3clock = Double.Parse(line[i + 6], CultureInfo.InvariantCulture);
+
+                            Console.WriteLine("l2clock: " + line[i + 7]);
+                            Console.Out.Flush();
+
                             var l2clock = Double.Parse(line[i + 7], CultureInfo.InvariantCulture);
-                            var l2invalidation = Double.Parse(line[i + 8], CultureInfo.InvariantCulture);
-                            var l1invalidation = Double.Parse(line[i + 9], CultureInfo.InvariantCulture);
-                            var drambw = Double.Parse(line[i + 10], CultureInfo.InvariantCulture);
+                            
 
                             yield return new TraceCounter(core, time, duration, TraceCounterType.IPC, ipc);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.Cycles, clock);
@@ -113,22 +115,42 @@ namespace Diagnostics.Tracing
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L2Hit, l2hit);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L3Clock, l3clock);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.L2Clock, l2clock);
-                            yield return new TraceCounter(core, time, duration, TraceCounterType.L2Invalidation, l2invalidation);
-                            yield return new TraceCounter(core, time, duration, TraceCounterType.L1Invalidation, l1invalidation);
-                            yield return new TraceCounter(core, time, duration, TraceCounterType.DramBW, drambw);
 
                             if (core == coreCount - 1)
                             //if (false)
                             {
-                                var MC_read = Double.Parse(line[i + 11], CultureInfo.InvariantCulture);
-                                var MC_write = Double.Parse(line[i + 12], CultureInfo.InvariantCulture);
-                                var QPI_incoming = Double.Parse(line[i + 13], CultureInfo.InvariantCulture);
-                                var QPI_outgoing = Double.Parse(line[i + 14], CultureInfo.InvariantCulture);
+                                var MC_read = Double.Parse(line[i + 8], CultureInfo.InvariantCulture);
+                                var MC_write = Double.Parse(line[i + 9], CultureInfo.InvariantCulture);
+                                var QPI_incoming = Double.Parse(line[i + 10], CultureInfo.InvariantCulture);
+                                var QPI_outgoing = Double.Parse(line[i + 11], CultureInfo.InvariantCulture);
                                 yield return new TraceCounter(core, time, duration, TraceCounterType.BytesReadFromMC, MC_read);
                                 yield return new TraceCounter(core, time, duration, TraceCounterType.BytesWrittenToMC, MC_write);
                                 yield return new TraceCounter(core, time, duration, TraceCounterType.IncomingQPI, QPI_incoming);
                                 yield return new TraceCounter(core, time, duration, TraceCounterType.OutgoingQPI, QPI_outgoing);
                             }
+                        }
+                    }
+
+                    if (line[2] == "COHERENCY_MEMORY")
+                    {
+                        // The lenght of the core entry
+                        //var recordLength = 8;
+                        var recordLength = 3; // Increased counter to accommodate missing data items
+                        var coreCount = (int)Math.Floor((double)(line.Length - offset) / recordLength);
+                        for (int core = 0; core < coreCount; ++core)
+                        {
+                            var i = offset + (core * recordLength);
+
+                            //Console.WriteLine("Parsing record for core " + core.ToString() + "...");
+                            //Console.Out.Flush();
+                            // Get the values for the cache
+                            var l2invalidation = Double.Parse(line[i + 0], CultureInfo.InvariantCulture);
+                            var l1invalidation = Double.Parse(line[i + 1], CultureInfo.InvariantCulture);
+                            var drambw = Double.Parse(line[i + 2], CultureInfo.InvariantCulture);
+
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L2Invalidation, l2invalidation);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.L1Invalidation, l1invalidation);
+                            yield return new TraceCounter(core, time, duration, TraceCounterType.DramBW, drambw);
                         }
                     }
 
@@ -155,9 +177,7 @@ namespace Diagnostics.Tracing
                         }
                     }
 
-
-
-                    //yield return new TraceCounter(csv, year, month, day);
+                    yield return new TraceCounter(0, time, 0, TraceCounterType.ParseError, 0);
                 }
             }
         }
@@ -194,6 +214,7 @@ namespace Diagnostics.Tracing
         BytesWrittenToMC,
         IncomingQPI,
         OutgoingQPI,
+        ParseError,
     }
 }
 

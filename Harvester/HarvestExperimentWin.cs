@@ -109,7 +109,15 @@ namespace Harvester
                     .ToArray();
             } else
             {
-                Console.WriteLine("File " + pcmCsv + " does not exist!!!!!!!");
+                Console.WriteLine("File " + pcmCsv + " does not exist!");
+                System.Environment.Exit(-1);
+            }
+
+            if (counters.Where(p => p.Type == TraceCounterType.ParseError).Select(p => 1).Sum() > 0 )
+            {
+                Console.WriteLine("Parse error while processing CSV file" + pcmCsv);
+                Console.WriteLine(counters.Where(p => p.Type != TraceCounterType.ParseError).Last().ToString());
+                System.Environment.Exit(-1);
             }
 
             // 50 ms window

@@ -398,6 +398,11 @@ namespace Harvester.Analysis
             counters.TLBMisses = (long)((hardware.Where(c => c.Type == TraceCounterType.TLBMiss).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.TLBClock = hardware.Where(c => c.Type == TraceCounterType.TLBClock).Select(c => c.Value).Average();
 
+            duration = hardware
+                .Where(c => c.Type == TraceCounterType.L1Invalidation)
+                .Select(c => c.Duration / 1000)
+                .Sum();
+
             counters.L1Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L1Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.L2Invalidations = (long)((hardware.Where(c => c.Type == TraceCounterType.L2Invalidation).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
             counters.DRAMBandwidth = (long)((hardware.Where(c => c.Type == TraceCounterType.DramBW).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
@@ -405,6 +410,10 @@ namespace Harvester.Analysis
 
             if (core == CoreCount - 1)
             {
+                duration = hardware
+                .Where(c => c.Type == TraceCounterType.BytesReadFromMC)
+                .Select(c => c.Duration / 1000)
+                .Sum();
                 counters.BytesReadFromMC = (long)((hardware.Where(c => c.Type == TraceCounterType.BytesReadFromMC).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
                 counters.BytesWrittenToMC = (long)((hardware.Where(c => c.Type == TraceCounterType.BytesWrittenToMC).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
                 counters.IncomingQPI = (long)((hardware.Where(c => c.Type == TraceCounterType.IncomingQPI).Select(c => c.Value).Sum() / duration) * this.Interval.TotalMilliseconds);
