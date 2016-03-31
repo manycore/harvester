@@ -177,7 +177,7 @@ namespace Diagnostics.Tracing
                         }
                     }
 
-                    yield return new TraceCounter(0, time, 0, TraceCounterType.ParseError, 0);
+                    //yield return new TraceCounter(0, time, 0, TraceCounterType.ParseError, 0);
                 }
             }
         }
