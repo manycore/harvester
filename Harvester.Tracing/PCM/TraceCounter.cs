@@ -105,7 +105,6 @@ namespace Diagnostics.Tracing
                             Console.Out.Flush();
 
                             var l2clock = Double.Parse(line[i + 7], CultureInfo.InvariantCulture);
-                            
 
                             yield return new TraceCounter(core, time, duration, TraceCounterType.IPC, ipc);
                             yield return new TraceCounter(core, time, duration, TraceCounterType.Cycles, clock);
@@ -177,7 +176,7 @@ namespace Diagnostics.Tracing
                         }
                     }
 
-                    yield return new TraceCounter(0, time, 0, TraceCounterType.ParseError, 0);
+                    //yield return new TraceCounter(0, time, 0, TraceCounterType.ParseError, 0);
                 }
             }
         }
